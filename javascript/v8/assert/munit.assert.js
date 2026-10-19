@@ -191,6 +191,19 @@ function loadMatrixFile(path) {
     }
 }
 loadMatrixFile.local = 1;
+const onlyDict = new Dict(libmunit_1.ONLY_DICT);
+const only = {
+    add: (id) => {
+        onlyDict.set(id, 1);
+    },
+    remove: (id) => {
+        onlyDict.remove(id);
+    },
+    any: () => {
+        const keys = onlyDict.getkeys();
+        return keys !== null && keys !== undefined && (!Array.isArray(keys) || keys.length > 0);
+    }
+};
 const engine = new libmunit_1.AssertEngine({
     send: (message, json) => {
         outlet(0, message, json);
@@ -211,7 +224,9 @@ const engine = new libmunit_1.AssertEngine({
     finished: (state) => {
         p.box.setboxattr('color', state === libmunit_1.State.Success ? GREEN : state === libmunit_1.State.Skipped ? YELLOW : RED);
     },
-    io
+    io,
+    only,
+    keepCapture: () => (0, libmunit_1.captureAttachment)(io, engine.settings.name ?? engine.settings.uuid ?? 'capture')
 });
 function symbolValue(name, args) {
     return args.length === 0 ? name : [name, ...args];

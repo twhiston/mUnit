@@ -23,6 +23,75 @@
           "*"
         ]
       }
+    },
+    {
+      "id": "gl-render-from-metro",
+      "kind": "forbid-path",
+      "level": "warn",
+      "from": {
+        "object": [
+          "metro"
+        ]
+      },
+      "to": {
+        "object": [
+          "jit.world",
+          "jit.pworld",
+          "jit.gl.render"
+        ]
+      },
+      "unless": {
+        "object": [
+          "defer",
+          "deferlow",
+          "qlim",
+          "jit.qball",
+          "qmetro"
+        ]
+      },
+      "message": "with Overdrive on, [metro] bangs on the scheduler thread, and a GL render banged there creates its context off the main thread, which macOS 26 kills Max for; use [qmetro], which always bangs on the main thread",
+      "fix": {
+        "replace": {
+          "object": "qmetro",
+          "args": "keep"
+        }
+      }
+    },
+    {
+      "id": "gl-render-from-scheduler",
+      "kind": "forbid-path",
+      "level": "warn",
+      "from": {
+        "object": [
+          "delay",
+          "pipe",
+          "tempo",
+          "clocker",
+          "line",
+          "snapshot~",
+          "edge~",
+          "midiin",
+          "notein",
+          "ctlin"
+        ]
+      },
+      "to": {
+        "object": [
+          "jit.world",
+          "jit.pworld",
+          "jit.gl.render"
+        ]
+      },
+      "unless": {
+        "object": [
+          "defer",
+          "deferlow",
+          "qlim",
+          "jit.qball",
+          "qmetro"
+        ]
+      },
+      "message": "with Overdrive on, this object outputs on the scheduler thread, and a GL render banged there creates its context off the main thread, which macOS 26 kills Max for; put [deferlow] before the render"
     }
   ]
 }

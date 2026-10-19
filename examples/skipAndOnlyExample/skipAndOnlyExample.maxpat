@@ -19,7 +19,7 @@
                     "numinlets": 1,
                     "numoutlets": 0,
                     "patching_rect": [ 647.0, 292.0, 246.0, 33.0 ],
-                    "text": "Would fail, but is reported as skipped because another assert has @only"
+                    "text": "Would fail, but is skipped because another assert has @only"
                 }
             },
             {
@@ -96,7 +96,7 @@
                     "numinlets": 1,
                     "numoutlets": 0,
                     "patching_rect": [ 20.0, 45.0, 485.0, 154.0 ],
-                    "text": "Sometimes while working on tests you may want to disable an assertion which currently fails, or disable all but one test in the file while you develop it. @skip and @only allow you to do this.\n\n@skip 1 reports an assert as skipped without evaluating it; skipped asserts count neither as passed nor failed, and JUnit shows them as <skipped/>.\n\n@only 1 on any assert makes the handler run that assert alone: every other assert in the suite is reported as skipped, whatever it found. It is for focusing on one test while working on it. \nSet forbidOnly: true in munit.config.js (as in CI) to fail the suite if an @only slips in."
+                    "text": "Sometimes while working on tests you may want to disable an assertion which currently fails, or disable all but one test in the file while you develop it. @skip and @only allow you to do this.\n\n@skip 1 reports an assert as skipped without evaluating it; skipped asserts count neither as passed nor failed, and JUnit shows them as <skipped/>.\n\n@only 1 on any assert makes that assert run alone: every other assert in the suite is skipped without being evaluated, and turns yellow. It is for focusing on one test while working on it. \nSet forbidOnly: true in munit.config.js (as in CI) to fail the suite if an @only slips in."
                 }
             },
             {
@@ -162,7 +162,7 @@
                     "numinlets": 1,
                     "numoutlets": 0,
                     "patching_rect": [ 995.0, 281.0, 190.0, 47.0 ],
-                    "text": "Would pass, but is reported as skipped because another assert has @only"
+                    "text": "Would pass, but is skipped because another assert has @only"
                 }
             },
             {

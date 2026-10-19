@@ -777,7 +777,7 @@
 										260,
 										187
 									],
-									"text": "Results: results.json lists every assert with its state, expected and actual values, runs and attachments. The JUnit formatter writes results.xml, one testsuite per @suite, with failures, skips and attachments linked for CI. log.txt is the captured Max console. Files an assert keeps with a failure go to artifacts/<uuid>/. The dsp settings are applied when the suite starts, DSP is switched on, and everything is restored after the teardowns.",
+									"text": "Results: results.json lists every assert with its state, expected and actual values, runs and attachments. The JUnit formatter writes results.xml, one testsuite per @suite, with failures, skips and attachments linked for CI. log.txt is the captured Max console. Files an assert keeps with a failure go to artifacts/<uuid>/. The dsp settings are applied when the suite starts and DSP is switched on; the tests start only once DSP is confirmed on those settings (otherwise none run and the suite fails), a change while the suite runs fails it, and everything is restored after the teardowns.",
 									"linecount": 13
 								}
 							}

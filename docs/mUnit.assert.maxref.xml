@@ -129,7 +129,7 @@
 		</attribute>
 		<attribute name="only" get="1" set="1" type="int" size="1">
 			<digest>Skip every other assert in the suite (default 0)</digest>
-			<description>When any assert in the suite has <at>only</at>, every other one is reported as skipped. Set <m>forbidOnly: true</m> in the configuration on CI, so one can't be committed by mistake.</description>
+			<description>When any assert in the suite has <at>only</at>, every other one is skipped without being evaluated, and its box turns yellow. An assert that finished before the <at>only</at> assert was loaded (an earlier patch in a sequential run) has already run; it is still reported as skipped. Set <m>forbidOnly: true</m> in the configuration on CI, so one can't be committed by mistake.</description>
 		</attribute>
 		<attribute name="name" get="1" set="1" type="symbol" size="1">
 			<digest>A name for the test (default: its UUID)</digest>

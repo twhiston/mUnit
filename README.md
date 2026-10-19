@@ -70,10 +70,18 @@ Restart Max afterwards.
 
 If you have the package installed locally you don't need to also get the cli
 seperately. You can simply add an alias to you .zshrc or powershell profile to
-the script which is included in this package
+the script which is included in this package. It runs under the `node` on your
+PATH, which must be Node 18 or newer (`node --version`).
 
 ```bash
-alias munit="$HOME/Documents/Max 9/Packages/mUnit/javascript/nodejs/runner/munit-cli.js"
+# zsh / bash: the single quotes keep the inner double quotes, so the space in
+# "Max 9" survives when the alias expands
+alias munit='node "$HOME/Documents/Max 9/Packages/mUnit/javascript/nodejs/runner/munit-cli.js"'
+```
+
+```powershell
+# PowerShell: Set-Alias can't take arguments, so use a function
+function munit { node "$HOME\Documents\Max 9\Packages\mUnit\javascript\nodejs\runner\munit-cli.js" @args }
 ```
 
 For the command line in a project or CI job, install it from npm:
@@ -83,9 +91,12 @@ For the command line in a project or CI job, install it from npm:
 
 ### First steps
 
-1. Make a folder for your tests `tests/`, with a `patchers` folder inside it.
-2. In `patchers`, save a patch that sends a value into an assert once mUnit is
-   ready:
+1. In your project folder, run `munit init`. It creates the `tests/` folder for
+   you, with a test wrangler patch (`runTests.maxpat`), a `munit.config.js`, a
+   `munit-lint.json` and an empty `patchers/` folder for your tests. You don't
+   need to make any of these yourself (see *Starting a suite*).
+2. In `tests/patchers`, save a patch that sends a value into an assert once
+   mUnit is ready:
 
    ```text
    [mUnit.loadbang]
@@ -96,12 +107,11 @@ For the command line in a project or CI job, install it from npm:
    ```
 
 3. Run it from a terminal (Max must be installed; the runner starts and quits
-   it): `munit run path/to/tests`. It prints an `ok` line for `equalsOne` and
-   exits with 0. Change the message to `2` and it prints `FAIL` with the reason,
-   and exits with 1.
+   it): `munit run tests/runTests.maxpat`. It prints an `ok` line for
+   `equalsOne` and exits with 0. Change the message to `2` and it prints `FAIL`
+   with the reason, and exits with 1.
 
-4. Run it inside Max instead, save a patch next to `tests/` containing
-   `[mUnit.harness @loadFolder tests]` and `[mUnit.handler]`, and open it.
+4. To run it inside Max instead, open `tests/runTests.maxpat`.
 
 From here, the help patcher of each object and the examples (below) cover
 everything else.
@@ -317,8 +327,10 @@ are tolerated before the assert fails.
 box turns yellow.
 
 @only (default false) - when any assert in the suite has `@only`, every other
-one is reported as skipped. Set `forbidOnly: true` in CI so one can't be
-committed by mistake.
+one is skipped without being evaluated, and its box turns yellow. Set
+`forbidOnly: true` in CI so one can't be committed by mistake. An assert that
+finished before the `@only` assert was loaded (an earlier patch in a
+sequential run) has already run; it is still reported as skipped.
 
 @name (default: the UUID) - a name for the test, used in logs and results. Every
 assert also has a UUID, which changes on each run and appears in all logging, so
@@ -447,7 +459,12 @@ outlet bangs once the capture has been evaluated.
   `@reference jongly.aif` compares with the sound Max ships with (at 44.1 kHz);
   `--take-references` still writes to `references/`.
 - In the results, a captured channel appears as a summary (length, rms, peak and
-  the first samples), not sample by sample.
+  the first samples), not sample by sample. A signal assert that fails keeps
+  its whole capture as `actual.wav` in the run's `artifacts/` folder, whatever
+  it evaluates, so the samples can be opened and looked at.
+
+Signal tests run the same with Overdrive on or off: `[mUnit.loadbang]` fires at
+low priority either way, so the capture buffer is ready before recording starts.
 
 `[mUnit.stimulus~]` makes a repeatable test signal, started at the same moment
 as the capture (`@trigger auto`, or a bang with `@trigger manual`; `stop` stops
@@ -475,9 +492,19 @@ dsp: { driver: "NonRealTime", sr: 48000, vs: 64 }
 `NonRealTime` renders as fast as the machine can, needs no audio hardware and
 makes the suite the same on every run, which is what CI wants. `sr` and `vs` are
 the sample rate and signal vector size. Each is optional. The handler switches
-DSP on after they are applied and, since Max keeps the driver in its
+DSP off, applies them, switches DSP on and, since Max keeps the driver in its
 preferences, restores everything after the teardowns. `settleMs` (default 1500)
 is how long a driver change gets to take effect.
+
+The tests start only once `[dspstate~]` has reported DSP running on the driver,
+rate and vector size asked for, and that has held for half a second. If it
+hasn't within 5 seconds plus `settleMs`, no tests run: the suite fails with
+what was wrong (for example `asked for 48000 Hz but DSP runs at 44100`), and the
+previous settings are restored. A change to the driver, rate or DSP state while
+the suite runs fails the suite too: it restarts signal objects (a `[gen~]`'s
+`History`, a counter, a capture) partway, so what was measured can't be
+trusted. A restart at the same settings is logged as a warning, with the time,
+to line up with the captures in `log.txt`.
 
 ## mUnit.loadbang
 
@@ -940,8 +967,13 @@ copy from:
 
 - `mUnit:recommended`: general patcher hygiene, used when there is no config.
   Warns about fan-out from one message outlet to several inlets without a
-  `[trigger]`, and about boxes that overlap in any patcher (panels and boxes
-  sent to the background are exempt).
+  `[trigger]`, about boxes that overlap in any patcher (panels and boxes
+  sent to the background are exempt), and about a `[metro]` or another timing
+  or MIDI object whose cords reach a `[jit.world]`, `[jit.pworld]` or
+  `[jit.gl.render]` without a `[deferlow]` or `[qmetro]` on the way. With
+  Overdrive on, that render runs on the scheduler thread and creates its GL
+  context off the main thread, which macOS 26 kills Max for. `--fix` turns
+  the `[metro]` into a `[qmetro]`.
 - `mUnit:tests`: for patches that run under mUnit, so add it to the config of
   your test folder. Blocks a second `[mUnit.handler]` in a file and blocks
   `[loadbang]` in favour of `[mUnit.loadbang]`, which waits for the handler.
@@ -966,6 +998,7 @@ it. `level` is `off`, `warn` or `block`; `block` is what fails CI.
 | Kind | Settings | Checks |
 | ---- | -------- | ------ |
 | `forbid-object` | `match`, optional `fix.replace` | a box matches; `fix` describes the replacement text |
+| `forbid-path` | `from`, `to`, optional `unless` (each a `match`), optional `fix.replace` | cords lead from a `from` box to a `to` box without passing an `unless` box; `fix` rewrites the `from` box |
 | `require-attribute` | `match`, `attribute`, optional `fix.set` | the attribute is present, inline (`@autowatch 0`) or saved on the box |
 | `attribute-value` | `match`, `attribute`, `value`, optional `fix: true` | the attribute has that value |
 | `max-instances` | `match`, `max`, `per` (`file` or `patcher`) | at most N matching boxes |

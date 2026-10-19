@@ -5,6 +5,7 @@
 ```ts
 type RuleKind = 
   | "forbid-object"
+  | "forbid-path"
   | "require-attribute"
   | "attribute-value"
   | "max-instances"

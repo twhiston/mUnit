@@ -11,7 +11,7 @@
 // and annotate: /** @type {import("munit-lint").X} */
 declare module 'munit-lint' {
   /** The kinds of rule: what `kind` in a rule's JSON may be. */
-  export type RuleKind = 'forbid-object' | 'require-attribute' | 'attribute-value' | 'max-instances' | 'fanout-without-trigger' | 'overlapping-boxes' | 'naming' | 'script';
+  export type RuleKind = 'forbid-object' | 'forbid-path' | 'require-attribute' | 'attribute-value' | 'max-instances' | 'fanout-without-trigger' | 'overlapping-boxes' | 'naming' | 'script';
 
   /** Which patchers in a file a rule looks at. */
   export interface RuleScope {

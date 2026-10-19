@@ -292,7 +292,7 @@
                     "numinlets": 1,
                     "numoutlets": 0,
                     "patching_rect": [ 781.0, 157.0, 274.0, 100.0 ],
-                    "text": "3. GPU: the same shader as jit.gl.pix in a hidden jit.world, its texture read back by a jit.matrix that the assert checks and the jit.pwindow below shows. A metro drives one frame per tick; each frame is one call, so @maxCalls 6 passes at the first frame that matches within 2/255 on 0.1% of cells. The teardown stops the metro."
+                    "text": "3. GPU: the same shader as jit.gl.pix in a hidden jit.world, its texture read back by a jit.matrix that the assert checks and the jit.pwindow below shows. A qmetro drives one frame per tick; each frame is one call, so @maxCalls 6 passes at the first frame that matches within 2/255 on 0.1% of cells. The teardown stops the qmetro."
                 }
             },
             {
@@ -325,7 +325,7 @@
                     "numoutlets": 1,
                     "outlettype": [ "bang" ],
                     "patching_rect": [ 660.0, 215.0, 66.0, 22.0 ],
-                    "text": "metro 50"
+                    "text": "qmetro 50"
                 }
             },
             {

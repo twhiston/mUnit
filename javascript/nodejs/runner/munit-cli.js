@@ -13,6 +13,12 @@ var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+};
+var __commonJS = (cb, mod) => function __require() {
+  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+};
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
     for (let key of __getOwnPropNames(from))
@@ -30,25 +36,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// src/munit-cli.ts
-var import_node_child_process = require("node:child_process");
-var fs = __toESM(require("node:fs"));
-var os = __toESM(require("node:os"));
-var path5 = __toESM(require("node:path"));
-var import_lint2 = require("@munit/lint");
-
-// src/core/options.ts
-var path2 = __toESM(require("node:path"));
-var import_lint = require("@munit-shared/lint");
-
-// src/core/init.ts
-var path = __toESM(require("node:path"));
-var import_lib = require("@munit-shared/lib");
-
 // src/core/verdict.ts
-var EXIT_PASSED = 0;
-var EXIT_FAILED = 1;
-var EXIT_INFRASTRUCTURE = 2;
 function exitCodeFor(status) {
   if (status === null || status.phase !== "finished") {
     return EXIT_INFRASTRUCTURE;
@@ -58,7 +46,6 @@ function exitCodeFor(status) {
   }
   return status.state === "Passed" ? EXIT_PASSED : EXIT_FAILED;
 }
-__name(exitCodeFor, "exitCodeFor");
 function describeStatus(status) {
   const lines = [
     `mUnit: ${String(status.state)}: ${status.passCount ?? 0} passed, ${status.failCount ?? 0} failed` + ((status.skipCount ?? 0) > 0 ? `, ${String(status.skipCount)} skipped` : "") + (status.outputDir !== void 0 ? `; results in ${status.outputDir}` : "")
@@ -74,9 +61,65 @@ function describeStatus(status) {
   }
   return lines;
 }
-__name(describeStatus, "describeStatus");
+var EXIT_PASSED, EXIT_FAILED, EXIT_INFRASTRUCTURE;
+var init_verdict = __esm({
+  "src/core/verdict.ts"() {
+    "use strict";
+    EXIT_PASSED = 0;
+    EXIT_FAILED = 1;
+    EXIT_INFRASTRUCTURE = 2;
+    __name(exitCodeFor, "exitCodeFor");
+    __name(describeStatus, "describeStatus");
+  }
+});
+
+// src/core/node-version.ts
+function nodeVersionProblem(version) {
+  const major = Number.parseInt(version.split(".")[0] ?? "", 10);
+  if (Number.isNaN(major) || major >= MIN_NODE_MAJOR) {
+    return null;
+  }
+  return `mUnit: the command line needs Node ${String(MIN_NODE_MAJOR)} or newer, and this is Node ${version} (${process.execPath}). Install a current Node from https://nodejs.org, or point your munit alias at a newer node.`;
+}
+var MIN_NODE_MAJOR;
+var init_node_version = __esm({
+  "src/core/node-version.ts"() {
+    "use strict";
+    MIN_NODE_MAJOR = 18;
+    __name(nodeVersionProblem, "nodeVersionProblem");
+  }
+});
+
+// src/node-version-guard.ts
+var require_node_version_guard = __commonJS({
+  "src/node-version-guard.ts"() {
+    "use strict";
+    init_verdict();
+    init_node_version();
+    var problem2 = nodeVersionProblem(process.versions.node);
+    if (problem2 !== null) {
+      console.error(problem2);
+      process.exit(EXIT_INFRASTRUCTURE);
+    }
+  }
+});
+
+// src/munit-cli.ts
+var import_node_version_guard = __toESM(require_node_version_guard());
+var import_node_child_process = require("node:child_process");
+var fs = __toESM(require("node:fs"));
+var os = __toESM(require("node:os"));
+var path5 = __toESM(require("node:path"));
+var import_lint2 = require("@munit/lint");
+
+// src/core/options.ts
+var path2 = __toESM(require("node:path"));
+var import_lint = require("@munit-shared/lint");
 
 // src/core/init.ts
+var path = __toESM(require("node:path"));
+var import_lib = require("@munit-shared/lib");
+init_verdict();
 var DEFAULT_INIT_FOLDER = "tests";
 var DEFAULT_WRANGLER = "runTests.maxpat";
 var DEFAULT_INIT_TESTS = "patchers";
@@ -558,6 +601,9 @@ function parseInitArgs(rest, cwd) {
 }
 __name(parseInitArgs, "parseInitArgs");
 
+// src/core/index.ts
+init_node_version();
+
 // src/core/launch.ts
 var path3 = __toESM(require("node:path"));
 var import_lib2 = require("@munit-shared/lib");
@@ -642,9 +688,13 @@ function launcherFor(platform) {
 }
 __name(launcherFor, "launcherFor");
 
+// src/core/index.ts
+init_verdict();
+
 // src/core/run.ts
 var path4 = __toESM(require("node:path"));
 var import_lib3 = require("@munit-shared/lib");
+init_verdict();
 var POLL_MS = 250;
 var QUIT_GRACE_MS = 15e3;
 var KILL_GRACE_MS = 5e3;

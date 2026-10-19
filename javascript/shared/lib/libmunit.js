@@ -29,11 +29,16 @@ var libmunit_exports = {};
 __export(libmunit_exports, {
   AssertEngine: () => AssertEngine,
   DEFAULT_TOLERANCE: () => DEFAULT_TOLERANCE,
+  DSP_CONFIRM_MS: () => DSP_CONFIRM_MS,
+  DSP_POLL_MS: () => DSP_POLL_MS,
+  DSP_STABLE_MS: () => DSP_STABLE_MS,
   DspController: () => DspController,
   EXACT: () => EXACT,
   HELPER_NAMES: () => HELPER_NAMES,
   LogLevel: () => LogLevel,
   MAX_DATA_INLETS: () => MAX_DATA_INLETS,
+  ONLY_DICT: () => ONLY_DICT,
+  ONLY_SKIP_MESSAGE: () => ONLY_SKIP_MESSAGE,
   OUTPUT_DIR_ENV: () => OUTPUT_DIR_ENV,
   OverallState: () => OverallState,
   PREVIEW_CHARS: () => PREVIEW_CHARS,
@@ -49,6 +54,7 @@ __export(libmunit_exports, {
   asMatrix: () => asMatrix,
   assertSettings: () => assertSettings,
   assertState: () => assertState,
+  captureAttachment: () => captureAttachment,
   checkDetails: () => checkDetails,
   compactInputs: () => compactInputs,
   compileExpression: () => compileExpression,
@@ -230,6 +236,8 @@ function formatProgress(entry) {
   const why = entry.state !== "Success" /* Success */ && entry.message !== null ? `: ${entry.message.split("\n")[0] ?? ""}` : "";
   return `${mark} ${name === "" ? "(unnamed)" : name}${why}`;
 }
+var ONLY_DICT = "munit.only";
+var ONLY_SKIP_MESSAGE = "skipped: another assert in the suite has @only";
 var RUN_CONTEXT_DICT = "munit.run";
 
 // src/internal.ts
@@ -867,11 +875,12 @@ function matchSignal(actual, reference, options) {
   const pass = options.exact ? diff === 0 : snr >= options.snrDb;
   return { pass, snrDb: snr, maxDiff: diff, latency, samples: a.length };
 }
+function captureAttachment(io, name) {
+  const file = artifactPath(io.artifactsDir(), name, "actual.wav");
+  return file !== null && io.writeSignal(file) ? [{ name: "actual.wav", path: file }] : [];
+}
 function signalReferenceEvaluator(reference, io, name) {
-  const actualFile = () => {
-    const file = artifactPath(io.artifactsDir(), name(), "actual.wav");
-    return file !== null && io.writeSignal(file) ? [{ name: "actual.wav", path: file }] : [];
-  };
+  const actualFile = () => captureAttachment(io, name());
   const options = { snrDb: reference.snrDb, maxLatency: reference.maxLatency, exact: reference.exact };
   const expected = reference.exact ? { maxDiff: 0 } : { snrDb: `>= ${reference.snrDb}` };
   return {
@@ -1436,6 +1445,9 @@ var AssertEngine = class {
     this.state.expression = description;
     this.evaluator = evaluator;
     this.registered = true;
+    if (s.only) {
+      this.host.only?.add(String(s.uuid));
+    }
     this.host.send("registerAssert", JSON.stringify(s));
     if (problem !== null) {
       this.host.log("ERROR" /* ERROR */, problem);
@@ -1447,6 +1459,10 @@ var AssertEngine = class {
       this.finish("Skipped" /* Skipped */, "skipped (@skip)");
       return s.dataInlets;
     }
+    if (this.skippedForOnly()) {
+      this.queue.length = 0;
+      return s.dataInlets;
+    }
     for (const [inlet, value] of this.queue.splice(0)) {
       this.input(inlet, value);
     }
@@ -1455,6 +1471,9 @@ var AssertEngine = class {
   // The suite has started: the timeout clock runs from now if it isn't
   // already running because an input arrived first
   start() {
+    if (this.skippedForOnly()) {
+      return;
+    }
     this.startClock();
   }
   // A value on data inlet n (1 = in1, the hot inlet). Cold inlets only store.
@@ -1483,7 +1502,7 @@ var AssertEngine = class {
   }
   // The host's timer fired: counts as a failed call
   onTimeout() {
-    if (this.state.finished) {
+    if (this.state.finished || this.skippedForOnly()) {
       return;
     }
     this.record({ state: "Fail" /* Fail */, error: `timed out after ${this.settings.timeout} ms` }, ["timeout"]);
@@ -1494,6 +1513,18 @@ var AssertEngine = class {
   // The object is being deleted
   dispose() {
     this.host.cancel();
+    if (this.registered && this.settings.only) {
+      this.host.only?.remove(String(this.settings.uuid));
+    }
+  }
+  // Another assert has @only: report Skipped without evaluating. Checked
+  // whenever this assert could run, since the @only one may register later
+  skippedForOnly() {
+    if (!this.registered || this.state.finished || this.settings.only || this.host.only?.any() !== true) {
+      return false;
+    }
+    this.finish("Skipped" /* Skipped */, ONLY_SKIP_MESSAGE);
+    return true;
   }
   startClock() {
     if (this.startedAt !== null || this.state.finished) {
@@ -1521,6 +1552,9 @@ var AssertEngine = class {
   evaluate() {
     if (this.state.finished) {
       this.host.log("INFO" /* INFO */, "input ignored: the assert has already finished");
+      return;
+    }
+    if (this.skippedForOnly()) {
       return;
     }
     this.startClock();
@@ -1587,10 +1621,16 @@ var AssertEngine = class {
     st.finalState = state;
     st.message = message;
     st.durationMs = this.startedAt === null ? 0 : this.host.now() - this.startedAt;
-    if (outcome !== null && state === "Fail" /* Fail */) {
-      copyDefined(st, outcome, ["expected", "actual", "operator", "diff"]);
-      if (outcome.attachments !== void 0 && outcome.attachments.length > 0) {
-        st.attachments = outcome.attachments;
+    if (state === "Fail" /* Fail */) {
+      if (outcome !== null) {
+        copyDefined(st, outcome, ["expected", "actual", "operator", "diff"]);
+      }
+      const attachments = [...outcome?.attachments ?? []];
+      if (this.sampleRate !== void 0 && !attachments.some((a) => a.name === "actual.wav")) {
+        attachments.push(...this.host.keepCapture?.() ?? []);
+      }
+      if (attachments.length > 0) {
+        st.attachments = attachments;
       }
     }
     if (this.recordings.size > 0) {
@@ -1607,6 +1647,9 @@ var AssertEngine = class {
 
 // src/dsp.ts
 var DSP_STEP_MS = 300;
+var DSP_POLL_MS = 100;
+var DSP_STABLE_MS = 500;
+var DSP_CONFIRM_MS = 5e3;
 var DspController = class {
   menus = { driver: [], sr: [], sigvs: [], switch: [] };
   index = { driver: -1, sr: -1, sigvs: -1, switch: -1 };
@@ -1614,6 +1657,17 @@ var DspController = class {
   dsp = { on: -1, sr: -1, vs: -1 };
   saved = null;
   host;
+  // Bumped on every change dspstate~ or the driver menu reports, so the
+  // confirmation can tell the state has held still
+  changes = 0;
+  // dspstate~ has reported DSP on since apply() switched it on, so the
+  // values it holds are from this start, not an earlier one
+  freshStart = false;
+  // Between dspReady and restore(): what the suite runs on, to report changes
+  watching = null;
+  // Each apply() and restore() gets a new generation; steps scheduled by an
+  // earlier one stop when they see it has moved on
+  generation = 0;
   constructor(host) {
     this.host = host;
   }
@@ -1624,7 +1678,14 @@ var DspController = class {
     } else if (message === "append") {
       this.menus[setting].push(args.map(String).join(" "));
     } else if (message === "set") {
-      this.index[setting] = Number(args[0]);
+      const next = Number(args[0]);
+      if (next !== this.index[setting]) {
+        this.changes++;
+        if (setting === "driver" && this.watching !== null) {
+          this.host.reply("dspChanged", `the audio driver changed from ${this.driverName()} to ${this.menus.driver[next] ?? `driver ${next}`} during the suite`);
+        }
+      }
+      this.index[setting] = next;
     }
   }
   // The value from an adstatus right outlet
@@ -1633,7 +1694,25 @@ var DspController = class {
   }
   // What dspstate~ reports
   dspState(field, value) {
-    this.dsp[field] = Number(value);
+    const next = Number(value);
+    const was = this.dsp[field];
+    if (next !== was) {
+      this.changes++;
+    }
+    if (field === "on" && next === 1) {
+      this.freshStart = true;
+    }
+    this.dsp[field] = next;
+    if (this.watching === null) {
+      return;
+    }
+    const what = { on: "DSP", sr: "the sample rate", vs: "the vector size" }[field];
+    const show = (v) => field === "on" ? v === 1 ? "on" : "off" : String(v);
+    if (next !== was) {
+      this.host.reply("dspChanged", `${what} changed from ${show(was)} to ${show(next)} during the suite; signal state (gen~ History, counters, captures) may have restarted`);
+    } else if (field === "on") {
+      this.host.reply("dspNote", `dspstate~ reported DSP on again at ${this.dsp.sr} Hz, vector size ${this.dsp.vs}: the DSP chain was restarted or rebuilt`);
+    }
   }
   driverName() {
     return this.menus.driver[this.index.driver] ?? `driver ${this.index.driver}`;
@@ -1643,42 +1722,104 @@ var DspController = class {
     const key = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
     return this.menus.driver.findIndex((item) => key(item) === key(name));
   }
-  // dsp apply <driver or ""> <sr or 0> <vs or 0> <settleMs>: switches the
-  // driver, waits settleMs for the change to land, sets the rates, switches
-  // DSP on and answers dspReady with what DSP really runs at
+  // dsp apply <driver or ""> <sr or 0> <vs or 0> <settleMs>: switches DSP
+  // off, switches the driver and waits settleMs for the change to land, sets
+  // the rates and switches DSP on. It answers dspReady <sr> <vs> <driver>
+  // only once dspstate~ has reported this start with what was asked for, and
+  // that has held for DSP_STABLE_MS; otherwise dspFailed with what is wrong
   apply(driver, sr, vs, settleMs) {
     if (this.saved === null) {
       this.saved = { driver: this.index.driver, sr: this.value.sr, sigvs: this.value.sigvs, on: this.value.switch > 0 ? 1 : 0 };
     }
+    this.watching = null;
+    const generation = ++this.generation;
     const settle = Math.max(0, Number(settleMs) || 0);
-    let changing = false;
+    const wanted = { driver: -1, sr: sr > 0 ? sr : 0, vs: vs > 0 ? vs : 0 };
     if (driver !== "") {
-      const i = this.findDriver(driver);
-      if (i < 0) {
-        this.host.reply("dspProblem", `no audio driver called "${driver}"; the choices are ${this.menus.driver.join(", ")}`);
-      } else if (i !== this.index.driver) {
-        this.host.toAdstatus("driver", i);
-        changing = true;
+      wanted.driver = this.findDriver(driver);
+      if (wanted.driver < 0) {
+        this.host.reply("dspFailed", `no audio driver called "${driver}"; the choices are ${this.menus.driver.join(", ")}`);
+        return;
       }
     }
+    this.host.toAdstatus("switch", 0);
+    const changing = wanted.driver >= 0 && wanted.driver !== this.index.driver;
+    if (changing) {
+      this.host.toAdstatus("driver", wanted.driver);
+    }
     this.host.schedule(() => {
-      this.setRates(sr, vs);
+      if (generation !== this.generation) {
+        return;
+      }
+      this.setRates(wanted.sr, wanted.vs);
       this.host.schedule(() => {
+        if (generation !== this.generation) {
+          return;
+        }
+        this.freshStart = false;
         this.host.toAdstatus("switch", 1);
-        this.host.schedule(() => {
-          if (sr > 0 && this.dsp.sr !== sr) {
-            this.host.reply("dspProblem", `asked for ${sr} Hz but DSP runs at ${this.dsp.sr}`);
-          }
-          if (vs > 0 && this.dsp.vs !== vs) {
-            this.host.reply("dspProblem", `asked for a vector size of ${vs} but DSP runs with ${this.dsp.vs}`);
-          }
-          this.host.reply("dspReady", this.dsp.sr, this.dsp.vs, this.driverName());
-        }, Math.max(DSP_STEP_MS, settle / 3));
+        this.confirm(wanted, settle, generation);
       }, DSP_STEP_MS);
-    }, changing ? settle : 0);
+    }, changing ? settle : DSP_STEP_MS);
+  }
+  // What is not yet as apply() asked; empty when everything is
+  mismatches(wanted) {
+    const out = [];
+    if (!this.freshStart || this.dsp.on !== 1) {
+      out.push("dspstate~ has not reported DSP on");
+    }
+    if (wanted.driver >= 0 && this.index.driver !== wanted.driver) {
+      out.push(`the driver is ${this.driverName()}, not ${this.menus.driver[wanted.driver] ?? `driver ${wanted.driver}`}`);
+    }
+    if (wanted.sr > 0 && this.dsp.sr !== wanted.sr) {
+      out.push(`asked for ${wanted.sr} Hz but DSP runs at ${this.dsp.sr}`);
+    }
+    if (wanted.vs > 0 && this.dsp.vs !== wanted.vs) {
+      out.push(`asked for a vector size of ${wanted.vs} but DSP runs with ${this.dsp.vs}`);
+    }
+    return out;
+  }
+  // Checks every DSP_POLL_MS until the state is right and has not changed
+  // for DSP_STABLE_MS. Halfway to the deadline the rates are sent once more
+  // (on some drivers only a rate sent with DSP on takes); at the deadline
+  // apply gives up
+  confirm(wanted, settle, generation) {
+    const deadline = DSP_CONFIRM_MS + settle;
+    let elapsed = 0;
+    let stableFor = 0;
+    let seen = this.changes;
+    let resent = false;
+    const poll = () => {
+      if (generation !== this.generation) {
+        return;
+      }
+      elapsed += DSP_POLL_MS;
+      const wrong = this.mismatches(wanted);
+      stableFor = wrong.length === 0 && seen === this.changes ? stableFor + DSP_POLL_MS : 0;
+      seen = this.changes;
+      if (stableFor >= DSP_STABLE_MS) {
+        this.watching = { driver: this.index.driver, sr: this.dsp.sr, vs: this.dsp.vs };
+        this.host.reply("dspReady", this.dsp.sr, this.dsp.vs, this.driverName());
+        return;
+      }
+      if (elapsed >= deadline) {
+        this.host.reply("dspFailed", `DSP did not settle within ${deadline} ms: ${wrong.length > 0 ? wrong.join("; ") : "it was still changing"}`);
+        return;
+      }
+      const ratesWrong = wanted.sr > 0 && this.dsp.sr !== wanted.sr || wanted.vs > 0 && this.dsp.vs !== wanted.vs;
+      if (!resent && elapsed >= deadline / 2 && ratesWrong) {
+        resent = true;
+        this.host.reply("dspProblem", `not settled after ${elapsed} ms (${wrong.join("; ")}); sending the rates again`);
+        this.setRates(wanted.sr, wanted.vs);
+      }
+      this.host.schedule(poll, DSP_POLL_MS);
+    };
+    this.host.schedule(poll, DSP_POLL_MS);
   }
   // dsp restore <settleMs>: the state before apply(), then dspRestored
   restore(settleMs) {
+    this.watching = null;
+    this.generation++;
     const was = this.saved;
     this.saved = null;
     if (was === null) {

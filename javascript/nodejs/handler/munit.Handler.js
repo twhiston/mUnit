@@ -684,6 +684,9 @@ var Suite = class {
   held = false;
   idleSent = false;
   settleTimer = null;
+  // Problems with the run as a whole (DSP changing mid-suite), reported with the results
+  problems = [];
+  abortedWith = null;
   timeoutTimer = null;
   constructor(options, events, now = Date.now) {
     this.options = options;
@@ -779,6 +782,21 @@ var Suite = class {
     this.check();
     return true;
   }
+  // A problem with the run as a whole: it fails the suite. Ignored once finished
+  addError(message) {
+    if (!this.finished) {
+      this.problems.push(message);
+    }
+  }
+  // Finish now, without running what is left: every unfinished assert fails
+  // with the problem, which is also the run's error
+  abort(problem) {
+    if (this.finished) {
+      return;
+    }
+    this.abortedWith = problem;
+    this.finish("complete");
+  }
   // Every registration so far, in order
   get registered() {
     return [...this.entries.values()].map((e) => e.settings);
@@ -800,6 +818,8 @@ var Suite = class {
     this.lastActivity = 0;
     this.held = false;
     this.idleSent = false;
+    this.problems.length = 0;
+    this.abortedWith = null;
   }
   check() {
     if (!this.started || this.finished) {
@@ -842,13 +862,17 @@ var Suite = class {
       missing.uuid = e.settings.uuid;
       missing.expression = e.settings.expression;
       missing.finalState = import_lib4.State.Fail;
-      missing.message = `no result before the suite timed out after ${this.options.suiteTimeout} ms`;
+      missing.message = this.abortedWith !== null ? `not run: ${this.abortedWith}` : `no result before the suite timed out after ${this.options.suiteTimeout} ms`;
       return missing;
     });
+    if (this.abortedWith !== null) {
+      errors.push(this.abortedWith);
+    }
+    errors.push(...this.problems);
     if (reason === "timeout") {
       errors.push(this.started ? `suite timed out after ${this.options.suiteTimeout} ms with ${this.unfinished()} unfinished assert(s)` : `suite timed out after ${this.options.suiteTimeout} ms before it started`);
     }
-    if (entries.length === 0) {
+    if (entries.length === 0 && this.abortedWith === null) {
       errors.push("no asserts registered");
     }
     for (const uuid of this.orphans.keys()) {
@@ -987,7 +1011,6 @@ var TeardownRegistry = class {
 var fs = __toESM(require("node:fs"));
 var path2 = __toESM(require("node:path"));
 var import_lib5 = require("@munit-shared/lib");
-var ONLY_SKIP_MESSAGE = "skipped: another assert in the suite has @only";
 function applyOnly(summary) {
   const only = summary.asserts.filter((a) => a.only);
   if (only.length === 0) {
@@ -1007,7 +1030,7 @@ function applyOnly(summary) {
       recordings: _recordings,
       ...rest
     } = r;
-    return { ...rest, finalState: import_lib5.State.Skipped, message: ONLY_SKIP_MESSAGE };
+    return { ...rest, finalState: import_lib5.State.Skipped, message: import_lib5.ONLY_SKIP_MESSAGE };
   });
   return { results, only: only.map((a) => String(a.name ?? a.uuid)) };
 }
@@ -1262,6 +1285,10 @@ var mutedFrom = null;
 var mutedRanges = [];
 var dspApplied = false;
 var dspWaiter = null;
+var dspRequest = 0;
+var dspFailure = null;
+var RESET_DSP_MS = 50;
+var resetDsp = null;
 var DSP_ANSWER_MS = 1e4;
 var maxPid = process.ppid;
 var suite = new Suite(
@@ -1383,6 +1410,8 @@ function prepareStaging() {
 }
 __name(prepareStaging, "prepareStaging");
 async function askDsp(dsp, action) {
+  const request = ++dspRequest;
+  dspWaiter?.("superseded");
   const answer = new Promise((resolve3) => {
     dspWaiter = resolve3;
   });
@@ -1398,10 +1427,14 @@ async function askDsp(dsp, action) {
     await import_max_api.default.outlet("dsp", "restore", dsp.settleMs);
   }
   const result = await Promise.race([answer, timeout]);
-  dspWaiter = null;
-  if (result === "timeout") {
-    say("warn", `dsp: the patch didn't answer the ${action} message; is [mUnit.handler] up to date?`);
+  if (request !== dspRequest) {
+    return "superseded";
   }
+  dspWaiter = null;
+  if (result === "timeout" && action === "restore") {
+    say("warn", "dsp: the patch didn't answer the restore message; is [mUnit.handler] up to date?");
+  }
+  return result;
 }
 __name(askDsp, "askDsp");
 async function publishRunContext() {
@@ -1429,6 +1462,10 @@ function applyConfig(raw, baseDir) {
     return;
   }
   config = resolved;
+  if (resetDsp !== null) {
+    clearTimeout(resetDsp);
+    resetDsp = null;
+  }
   suite.arm({ settleMs: resolved.settleMs, suiteTimeout: resolved.suiteTimeout });
   say("info", `configured; results go to ${runner.outputDir ?? resolved.outputDir}`);
   if (takingReferences()) {
@@ -1438,15 +1475,34 @@ function applyConfig(raw, baseDir) {
   prepareReferenceFolders(suite.registered);
   void (async () => {
     await publishRunContext();
-    if (resolved.dsp !== null) {
-      dspApplied = true;
-      await askDsp(resolved.dsp, "apply");
+    if (!await applyDsp(resolved.dsp)) {
+      return;
     }
     void reportStatus(runningStatus(maxPid, progress));
     announceReady(true);
   })();
 }
 __name(applyConfig, "applyConfig");
+async function applyDsp(dsp) {
+  if (dsp === null) {
+    return true;
+  }
+  dspApplied = true;
+  dspFailure = null;
+  const answer = await askDsp(dsp, "apply");
+  if (answer === "ready") {
+    return true;
+  }
+  if (answer === "superseded") {
+    return false;
+  }
+  const why = answer === "failed" ? dspFailure ?? "the DSP settings did not take" : "the patch didn't confirm the DSP settings; is [mUnit.handler] up to date?";
+  const problem = `dsp: ${why}; no tests ran`;
+  say("error", problem);
+  suite.abort(problem);
+  return false;
+}
+__name(applyDsp, "applyDsp");
 function loadConfigFile(dir) {
   const file = path4.join(dir, CONFIG_FILE_NAME);
   if (!fs3.existsSync(file)) {
@@ -1569,7 +1625,22 @@ var commands = {
     if (config !== null) {
       prepareStaging();
       suite.arm({ settleMs: config.settleMs, suiteTimeout: config.suiteTimeout });
-      announceReady(true);
+      if (config.dsp === null) {
+        announceReady(true);
+      } else {
+        const dsp = config.dsp;
+        if (resetDsp !== null) {
+          clearTimeout(resetDsp);
+        }
+        resetDsp = setTimeout(() => {
+          resetDsp = null;
+          void applyDsp(dsp).then((ready) => {
+            if (ready) {
+              announceReady(true);
+            }
+          });
+        }, RESET_DSP_MS);
+      }
     }
   }, "reset")
 };
@@ -1623,6 +1694,18 @@ import_max_api.default.addHandler("registerAssert", (settings) => {
 import_max_api.default.addHandler("dspReady", (sr, vs, driver) => {
   say("info", `dsp: running on ${String(driver)} at ${String(sr)} Hz, vector size ${String(vs)}`);
   dspWaiter?.("ready");
+});
+import_max_api.default.addHandler("dspFailed", (...words) => {
+  dspFailure = words.map(String).join(" ");
+  dspWaiter?.("failed");
+});
+import_max_api.default.addHandler("dspChanged", (...words) => {
+  const problem = `dsp: ${words.map(String).join(" ")}`;
+  say("error", problem);
+  suite.addError(problem);
+});
+import_max_api.default.addHandler("dspNote", (...words) => {
+  say("warn", `dsp: ${words.map(String).join(" ")}`);
 });
 import_max_api.default.addHandler("dspRestored", () => {
   say("info", "dsp: previous settings restored");

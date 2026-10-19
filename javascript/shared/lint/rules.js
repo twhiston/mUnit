@@ -15,7 +15,7 @@ exports.describeMatch = describeMatch;
 const util_1 = require("./util");
 const model_1 = require("./model");
 exports.LEVELS = ['off', 'warn', 'block'];
-exports.RULE_KINDS = ['forbid-object', 'require-attribute', 'attribute-value', 'max-instances', 'fanout-without-trigger', 'overlapping-boxes', 'naming', 'script'];
+exports.RULE_KINDS = ['forbid-object', 'forbid-path', 'require-attribute', 'attribute-value', 'max-instances', 'fanout-without-trigger', 'overlapping-boxes', 'naming', 'script'];
 function stringList(value) {
     if (typeof value === 'string') {
         return [value];
@@ -25,27 +25,27 @@ function stringList(value) {
     }
     return null;
 }
-function parseMatch(raw, where, errors) {
+function parseMatch(raw, where, errors, key = 'match') {
     if (!(0, util_1.isRecord)(raw)) {
-        errors.push(`${where}: "match" must be an object with object, maxclass, args or text`);
+        errors.push(`${where}: "${key}" must be an object with object, maxclass, args or text`);
         return {};
     }
     const before = errors.length;
     const match = {};
-    for (const key of Object.keys(raw)) {
-        const value = raw[key];
-        if (key === 'object' || key === 'maxclass' || key === 'args') {
+    for (const field of Object.keys(raw)) {
+        const value = raw[field];
+        if (field === 'object' || field === 'maxclass' || field === 'args') {
             const list = stringList(value);
             if (list === null) {
-                errors.push(`${where}: match.${key} must be a string or a list of strings`);
+                errors.push(`${where}: ${key}.${field} must be a string or a list of strings`);
             }
             else {
-                match[key] = list;
+                match[field] = list;
             }
         }
-        else if (key === 'text') {
+        else if (field === 'text') {
             if (typeof value !== 'string') {
-                errors.push(`${where}: match.text must be a regular expression string`);
+                errors.push(`${where}: ${key}.text must be a regular expression string`);
             }
             else {
                 try {
@@ -53,16 +53,16 @@ function parseMatch(raw, where, errors) {
                     match.text = value;
                 }
                 catch (e) {
-                    errors.push(`${where}: match.text: ${e.message}`);
+                    errors.push(`${where}: ${key}.text: ${e.message}`);
                 }
             }
         }
         else {
-            errors.push(`${where}: match.${key} is not a matcher; use object, maxclass, args or text`);
+            errors.push(`${where}: ${key}.${field} is not a matcher; use object, maxclass, args or text`);
         }
     }
     if (Object.keys(match).length === 0 && errors.length === before) {
-        errors.push(`${where}: "match" needs at least one of object, maxclass, args or text`);
+        errors.push(`${where}: "${key}" needs at least one of object, maxclass, args or text`);
     }
     return match;
 }
@@ -81,6 +81,23 @@ function parseScope(raw, where, errors) {
     }
     return { namespace };
 }
+function parseReplaceFix(fix, where, errors) {
+    if (fix === undefined) {
+        return undefined;
+    }
+    const replace = (0, util_1.isRecord)(fix) ? fix['replace'] : undefined;
+    if (!(0, util_1.isRecord)(replace) || typeof replace['object'] !== 'string') {
+        errors.push(`${where}: fix must be { "replace": { "object": "<name>", "args": "keep" | "drop" | [...] } }`);
+        return undefined;
+    }
+    const args = replace['args'] ?? 'keep';
+    const list = stringList(args);
+    if (args !== 'keep' && args !== 'drop' && (list === null || typeof args === 'string')) {
+        errors.push(`${where}: fix.replace.args must be "keep", "drop" or a list of tokens`);
+        return undefined;
+    }
+    return { replace: { object: replace['object'], args: args === 'keep' || args === 'drop' ? args : list } };
+}
 function requireString(raw, key, where, errors) {
     const value = raw[key];
     if (typeof value !== 'string' || value === '') {
@@ -92,6 +109,7 @@ function requireString(raw, key, where, errors) {
 const COMMON_KEYS = new Set(['id', 'kind', 'level', 'message', 'scope', '$schema']);
 const KIND_KEYS = {
     'forbid-object': ['match', 'fix'],
+    'forbid-path': ['from', 'to', 'unless', 'fix'],
     'require-attribute': ['match', 'attribute', 'fix'],
     'attribute-value': ['match', 'attribute', 'value', 'fix'],
     'max-instances': ['match', 'max', 'per'],
@@ -142,22 +160,26 @@ function parseRule(raw, source, errors) {
     switch (kind) {
         case 'forbid-object': {
             const r = { ...base, kind: 'forbid-object', match: parseMatch(raw['match'], where, errors) };
-            const fix = raw['fix'];
+            const fix = parseReplaceFix(raw['fix'], where, errors);
             if (fix !== undefined) {
-                const replace = (0, util_1.isRecord)(fix) ? fix['replace'] : undefined;
-                if (!(0, util_1.isRecord)(replace) || typeof replace['object'] !== 'string') {
-                    errors.push(`${where}: fix must be { "replace": { "object": "<name>", "args": "keep" | "drop" | [...] } }`);
-                }
-                else {
-                    const args = replace['args'] ?? 'keep';
-                    const list = stringList(args);
-                    if (args !== 'keep' && args !== 'drop' && (list === null || typeof args === 'string')) {
-                        errors.push(`${where}: fix.replace.args must be "keep", "drop" or a list of tokens`);
-                    }
-                    else {
-                        r.fix = { replace: { object: replace['object'], args: args === 'keep' || args === 'drop' ? args : list } };
-                    }
-                }
+                r.fix = fix;
+            }
+            rule = r;
+            break;
+        }
+        case 'forbid-path': {
+            const r = {
+                ...base,
+                kind: 'forbid-path',
+                from: parseMatch(raw['from'], where, errors, 'from'),
+                to: parseMatch(raw['to'], where, errors, 'to')
+            };
+            if (raw['unless'] !== undefined) {
+                r.unless = parseMatch(raw['unless'], where, errors, 'unless');
+            }
+            const fix = parseReplaceFix(raw['fix'], where, errors);
+            if (fix !== undefined) {
+                r.fix = fix;
             }
             rule = r;
             break;

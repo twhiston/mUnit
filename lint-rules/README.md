@@ -55,6 +55,7 @@ once; an inner config's rule with an id already seen replaces the outer one.
 | Kind | Settings | Checks |
 | ---- | -------- | ------ |
 | `forbid-object` | `match`, optional `fix.replace` | a matching box is not allowed |
+| `forbid-path` | `from`, `to` (each a `match`), optional `unless` (a `match`), optional `fix.replace` | a path of cords from a `from` box reaches a `to` box without passing an `unless` box; the `from` box is reported, with the path |
 | `require-attribute` | `match`, `attribute`, optional `fix.set` | the attribute is present, inline (`@autowatch 0`) or saved on the box |
 | `attribute-value` | `match`, `attribute`, `value`, optional `fix: true` | the attribute has that value (`0`, `"0"` and `false` compare equal) |
 | `max-instances` | `match`, `max`, optional `per` (`file` or `patcher`) | at most `max` matching boxes; `0` forbids them |
@@ -77,6 +78,36 @@ Which boxes a rule looks at. Every field given must match:
   `[metro 2 100]`.
 - `text`: a regular expression over the whole box text, e.g. `"^print$"` for
   a `[print]` with no name.
+
+## `forbid-path`
+
+Some objects are fine on their own and only wrong in what they drive. A
+`forbid-path` rule follows the cords out of every box matching `from`, through
+every outlet and the objects in between, and reports the `from` box when a
+path reaches a box matching `to`. A path stops at a box matching `unless`.
+The finding ends with the shortest such path, e.g.
+`([metro 50] → [t b b] → [jit.world foo])`, and a `fix.replace` rewrites the
+`from` box. Cords are followed within one patcher; a path into a subpatcher
+or through `[send]` is not.
+
+`mUnit:recommended` uses it for Jitter: with Overdrive on, `[metro]` and the
+other timing and MIDI objects output on the scheduler thread, and a
+`[jit.world]`, `[jit.pworld]` or `[jit.gl.render]` banged from there creates
+its GL context off the main thread, which macOS 26 kills Max for.
+`gl-render-from-metro` fixes `[metro]` to `[qmetro]`, which always bangs on
+the main thread. `gl-render-from-scheduler` covers the rest and has no fix:
+put `[deferlow]` before the render.
+
+```json
+{
+  "id": "gl-render-from-metro",
+  "kind": "forbid-path",
+  "from": { "object": "metro" },
+  "to": { "object": ["jit.world", "jit.pworld", "jit.gl.render"] },
+  "unless": { "object": ["defer", "deferlow", "qlim", "jit.qball", "qmetro"] },
+  "fix": { "replace": { "object": "qmetro" } }
+}
+```
 
 ## `scope`
 
@@ -114,7 +145,7 @@ of them. It applies to that patcher, not to its subpatchers.
 
 ## Fixes
 
-Three kinds can describe a fix, which `munit lint --fix` (or `fix` sent to
+Four kinds can describe a fix, which `munit lint --fix` (or `fix` sent to
 `[mUnit.lint]`) applies and writes back:
 
 - `forbid-object` with `fix.replace`: the object is replaced in the box
@@ -122,6 +153,8 @@ Three kinds can describe a fix, which `munit lint --fix` (or `fix` sent to
   `"drop"`, or a list of tokens where `"$1"`, `"$2"`, ... pick the original
   arguments by position, so `["$2", "$1"]` swaps two. `@attributes` in the
   text are kept.
+- `forbid-path` with `fix.replace`: the same, on the box the path starts
+  from.
 - `require-attribute` with `fix.set`: the attribute is added with that value.
 - `attribute-value` with `fix: true`: the attribute is set to `value`.
 
@@ -135,7 +168,7 @@ if that makes room for another fix it is applied too, up to five passes.
 
 ## Script rules
 
-When the six JSON kinds can't say it, a `script` rule runs a JavaScript
+When the eight JSON kinds can't say it, a `script` rule runs a JavaScript
 module:
 
 ```json

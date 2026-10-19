@@ -62,7 +62,7 @@
 		<method name="reset">
 			<arglist />
 			<digest>Forget the current run and start a new one</digest>
-			<description>Clears the registrations, results and log, keeps the configuration, and announces ready again. <o>mUnit.harness</o> sends it when it runs again.</description>
+			<description>Clears the registrations, results and log, keeps the configuration, applies its <m>dsp</m> settings again (they were restored when the last run finished) and announces ready again. <o>mUnit.harness</o> sends it when it runs again.</description>
 		</method>
 		<method name="hydrateConfiguration">
 			<arglist>
@@ -102,7 +102,7 @@
 			<description>With ignoreConsoleErrors false, any error in the Max console fails the suite (default true). Output filters are regexes whose matching lines are left out of the written log; object filters name Max objects whose console output is not captured (default ["node.script"]).</description>
 		</entry>
 		<entry name="dsp">
-			<description>{ driver, sr, vs, settleMs }: audio settings applied when the suite starts, with DSP switched on, and restored after the teardowns. "NonRealTime" needs no hardware and renders as fast as the machine can.</description>
+			<description>{ driver, sr, vs, settleMs }: audio settings applied when the suite starts, with DSP switched on, and restored after the teardowns. "NonRealTime" needs no hardware and renders as fast as the machine can. The tests start only once dspstate~ reports DSP running on these settings, held for half a second; if that doesn't happen within 5 seconds plus settleMs, no tests run and the suite fails with the reason. A change to them while the suite runs fails the suite.</description>
 		</entry>
 		<entry name="takeReferences, forbidOnly">
 			<description>Take references: snapshots and reference comparisons write what they get, and pass; fail the suite if any assert has @only.</description>

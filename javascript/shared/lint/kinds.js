@@ -61,6 +61,53 @@ function forbidObject(rule, patchers) {
     }
     return findings;
 }
+function forbidPath(rule, patchers) {
+    const findings = [];
+    const isFrom = (0, rules_1.compileMatch)(rule.from);
+    const isTo = (0, rules_1.compileMatch)(rule.to);
+    const isUnless = rule.unless === undefined ? () => false : (0, rules_1.compileMatch)(rule.unless);
+    for (const patcher of patchers) {
+        for (const source of patcher.boxes) {
+            if (!isFrom(source)) {
+                continue;
+            }
+            const route = reach(patcher, source, isTo, isUnless);
+            if (route === null) {
+                continue;
+            }
+            const target = route[route.length - 1];
+            const cords = route.map(shortLabel).join(' → ');
+            const fallback = `${shortLabel(source)} reaches ${shortLabel(target)}${rule.unless === undefined ? '' : ` without passing ${(0, rules_1.describeMatch)(rule.unless)}`}`;
+            const edits = rule.fix === undefined
+                ? []
+                : [{ op: 'set-text', patcher: patcher.ids, box: source.id, text: replacementText(source, rule.fix.replace.object, rule.fix.replace.args) }];
+            findings.push({ patcher, box: source, message: `${message(rule, fallback)} (${cords})`, edits });
+        }
+    }
+    return findings;
+}
+function reach(patcher, source, isTo, isUnless) {
+    const cameFrom = new Map([[source, null]]);
+    const queue = [source];
+    for (let i = 0; i < queue.length; i++) {
+        const box = queue[i];
+        for (const { destination, disabled } of (0, model_1.connectionsFrom)(patcher, box)) {
+            if (disabled || cameFrom.has(destination) || isUnless(destination)) {
+                continue;
+            }
+            cameFrom.set(destination, box);
+            if (isTo(destination)) {
+                const route = [];
+                for (let at = destination; at !== null; at = cameFrom.get(at) ?? null) {
+                    route.unshift(at);
+                }
+                return route;
+            }
+            queue.push(destination);
+        }
+    }
+    return null;
+}
 function requireAttribute(rule, patchers) {
     const findings = [];
     const matches = (0, rules_1.compileMatch)(rule.match);
@@ -315,6 +362,8 @@ function runRule(rule, document, patchers, context = {}) {
     switch (rule.kind) {
         case 'forbid-object':
             return forbidObject(rule, patchers);
+        case 'forbid-path':
+            return forbidPath(rule, patchers);
         case 'require-attribute':
             return requireAttribute(rule, patchers);
         case 'attribute-value':

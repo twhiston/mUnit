@@ -4,7 +4,10 @@
 
 The DSP settings of [HandlerConfig.dsp](HandlerConfig.md#dsp): the audio driver by name,
 the sample rate and the signal vector size. Each is optional; what is left
-out keeps its current value.
+out keeps its current value. The tests start only once `[dspstate~]` has
+reported DSP running on them, unchanged for half a second; if that takes
+longer than 5 seconds plus `settleMs`, no tests run and the suite fails. A
+change while the suite runs fails it too.
 
 ## Properties
 

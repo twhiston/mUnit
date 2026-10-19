@@ -42,6 +42,9 @@
           "$ref": "#/$defs/forbid-object"
         },
         {
+          "$ref": "#/$defs/forbid-path"
+        },
+        {
           "$ref": "#/$defs/require-attribute"
         },
         {
@@ -306,6 +309,273 @@
         "id",
         "kind",
         "match"
+      ],
+      "additionalProperties": false
+    },
+    "forbid-path": {
+      "type": "object",
+      "title": "forbid-path",
+      "description": "A path of cords from a box matching \"from\" reaches a box matching \"to\" without passing a box matching \"unless\". Cords are followed through every outlet within one patcher; the source box is reported, with the path.",
+      "properties": {
+        "$schema": {
+          "type": "string",
+          "description": "The schema of this file, for editor completion: \"./rule.schema.json\" relative to this file."
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The rule's id, unique within a config: findings name it, and overrides and \"munit-lint disable\" comments refer to it."
+        },
+        "level": {
+          "description": "What a finding does: \"warn\" is reported, \"block\" is reported and makes `munit lint` exit 1 (fails CI), \"off\" turns the rule off. Default \"warn\".",
+          "enum": [
+            "off",
+            "warn",
+            "block"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "description": "The message of each finding, replacing the kind's default. Say what to do instead."
+        },
+        "scope": {
+          "description": "Which patchers in a file the rule looks at, by namespace. Default [\"box\"].",
+          "type": "object",
+          "properties": {
+            "namespace": {
+              "description": "\"box\" (an ordinary patcher), \"dsp.gen\" ([gen~] and .gendsp), \"jit.gen\" ([jit.gen], [jit.pix], [jit.gl.pix]), \"rnbo\" ([rnbo~] and .rnbopat), or \"*\" for all of them.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1
+                }
+              ]
+            }
+          },
+          "required": [
+            "namespace"
+          ],
+          "additionalProperties": false
+        },
+        "kind": {
+          "const": "forbid-path",
+          "description": "A path of cords from a box matching \"from\" reaches a box matching \"to\" without passing a box matching \"unless\". Cords are followed through every outlet within one patcher; the source box is reported, with the path."
+        },
+        "from": {
+          "description": "Where a path starts: the box that is reported and that the fix rewrites. Every field given must match.",
+          "type": "object",
+          "properties": {
+            "object": {
+              "description": "Object name(s). Names are normalised like the box's: \"t\", \"trigger\", \"zl reg\" and \"zl.reg\" all work, and UI objects match by their class (\"toggle\"). Several names match any of them.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "maxclass": {
+              "description": "Max class(es) of the box: \"newobj\", \"message\", \"comment\", \"toggle\", ...",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "args": {
+              "description": "Positional argument patterns, matched from the first argument; \"*\" matches any one argument. The box may have more arguments than patterns.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "text": {
+              "type": "string",
+              "description": "A regular expression over the whole box text, e.g. \"^print$\" for a [print] with no name."
+            }
+          },
+          "minProperties": 1,
+          "additionalProperties": false
+        },
+        "to": {
+          "description": "What a path must not reach. Every field given must match.",
+          "type": "object",
+          "properties": {
+            "object": {
+              "description": "Object name(s). Names are normalised like the box's: \"t\", \"trigger\", \"zl reg\" and \"zl.reg\" all work, and UI objects match by their class (\"toggle\"). Several names match any of them.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "maxclass": {
+              "description": "Max class(es) of the box: \"newobj\", \"message\", \"comment\", \"toggle\", ...",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "args": {
+              "description": "Positional argument patterns, matched from the first argument; \"*\" matches any one argument. The box may have more arguments than patterns.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "text": {
+              "type": "string",
+              "description": "A regular expression over the whole box text, e.g. \"^print$\" for a [print] with no name."
+            }
+          },
+          "minProperties": 1,
+          "additionalProperties": false
+        },
+        "unless": {
+          "description": "Boxes that end a path, e.g. [deferlow]: a path through one is fine. Every field given must match.",
+          "type": "object",
+          "properties": {
+            "object": {
+              "description": "Object name(s). Names are normalised like the box's: \"t\", \"trigger\", \"zl reg\" and \"zl.reg\" all work, and UI objects match by their class (\"toggle\"). Several names match any of them.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "maxclass": {
+              "description": "Max class(es) of the box: \"newobj\", \"message\", \"comment\", \"toggle\", ...",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "args": {
+              "description": "Positional argument patterns, matched from the first argument; \"*\" matches any one argument. The box may have more arguments than patterns.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "text": {
+              "type": "string",
+              "description": "A regular expression over the whole box text, e.g. \"^print$\" for a [print] with no name."
+            }
+          },
+          "minProperties": 1,
+          "additionalProperties": false
+        },
+        "fix": {
+          "description": "How --fix rewrites the box the path starts from: replace the object, keeping, dropping or remapping its arguments; @attributes in the text are kept.",
+          "type": "object",
+          "properties": {
+            "replace": {
+              "type": "object",
+              "properties": {
+                "object": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "The object to put in its place, e.g. \"list.reg\"."
+                },
+                "args": {
+                  "description": "\"keep\" (the default): the original arguments; \"drop\": none; a list: tokens written as given, where \"$1\", \"$2\", ... pick the original arguments by position.",
+                  "oneOf": [
+                    {
+                      "enum": [
+                        "keep",
+                        "drop"
+                      ]
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "object"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "replace"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "from",
+        "to"
       ],
       "additionalProperties": false
     },
