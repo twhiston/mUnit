@@ -1,0 +1,99 @@
+{
+  "patcher": {
+    "fileversion": 1,
+    "appversion": {
+      "major": 9,
+      "minor": 1,
+      "revision": 0,
+      "architecture": "x64",
+      "modernui": 1
+    },
+    "classnamespace": "dsp.gen",
+    "rect": [
+      0.0,
+      0.0,
+      400.0,
+      300.0
+    ],
+    "boxes": [
+      {
+        "box": {
+          "id": "gen-in",
+          "maxclass": "newobj",
+          "numinlets": 0,
+          "numoutlets": 1,
+          "outlettype": [
+            ""
+          ],
+          "patching_rect": [
+            30.0,
+            30.0,
+            40.0,
+            22.0
+          ],
+          "text": "in 1"
+        }
+      },
+      {
+        "box": {
+          "id": "gen-mul",
+          "maxclass": "newobj",
+          "numinlets": 2,
+          "numoutlets": 1,
+          "outlettype": [
+            ""
+          ],
+          "patching_rect": [
+            30.0,
+            80.0,
+            46.0,
+            22.0
+          ],
+          "text": "* 0.5"
+        }
+      },
+      {
+        "box": {
+          "id": "gen-out",
+          "maxclass": "newobj",
+          "numinlets": 1,
+          "numoutlets": 0,
+          "outlettype": [],
+          "patching_rect": [
+            30.0,
+            130.0,
+            46.0,
+            22.0
+          ],
+          "text": "out 1"
+        }
+      }
+    ],
+    "lines": [
+      {
+        "patchline": {
+          "destination": [
+            "gen-mul",
+            0
+          ],
+          "source": [
+            "gen-in",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "destination": [
+            "gen-out",
+            0
+          ],
+          "source": [
+            "gen-mul",
+            0
+          ]
+        }
+      }
+    ]
+  }
+}

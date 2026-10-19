@@ -1,0 +1,19 @@
+{
+  "$schema": "../../../../lint-rules/rule.schema.json",
+  "rules": [
+    {
+      "id": "named-subpatchers",
+      "kind": "script",
+      "level": "warn",
+      "module": "./named-subpatchers.js",
+      "options": { "objects": ["p", "patcher"] }
+    },
+    {
+      "id": "send-receive-pairs",
+      "kind": "script",
+      "level": "warn",
+      "module": "./send-receive-pairs.js",
+      "options": { "ignore": ["mUnit.harness"] }
+    }
+  ]
+}

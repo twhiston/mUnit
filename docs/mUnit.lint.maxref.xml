@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="mUnit.lint" module="max" category="mUnit">
+
+	<digest>
+		Lint the patches in a folder as you save them
+	</digest>
+
+	<description>
+		<o>mUnit.lint</o> watches <at>folder</at> and checks every patcher file in it (.maxpat, .maxhelp, .gendsp, .rnbopat) against your lint rules the moment it is saved, without leaving Max. Findings go to the Max console: a <m>warn</m> rule posts a warning, a <m>block</m> rule posts an error, and one line per file sums up. The patch you are editing is checked too, even outside the folder: the object keeps an eye on the front window. <at>followfront</at> <m>0</m> turns that off, so only <at>folder</at> and below is linted. The rules come from <m>munit-lint.json</m> files, which cascade: for each file, every config in its folder and the folders above it applies, outermost first, up to one that says <m>root</m>; an inner config adds rules, overrides and ignore patterns to the outer ones and may replace a rule by id or the files list. <at>config</at> names one file that applies alone instead; without any config the built-in <m>mUnit:recommended</m> set applies. <at>root</at> makes the folder the top of the cascade, so a config above it is ignored: project mode, with <at>folder</at> at the root of a repository. <at>folder</at> <m>none</m> watches no folder at all: the patch in front is linted when it is saved, wherever it is, with the configs in and above its own folder; that is how <m>Extras &gt; mUnit Lint Server</m> runs, a patch to leave open while you work. Every path in a config is relative to the config file's folder. The help patcher's config tab and the lintConfigExample extra show this with a project of several folders. The same rules and the same engine run from the command line as <m>munit lint</m> (the munit-cli npm package, or javascript/nodejs/runner/munit-cli.js inside this package), so what passes here passes in CI. The patch holding <o>mUnit.lint</o> must be saved, since <at>folder</at> is relative to it. To silence a rule in one patcher, add a comment box there reading <m>munit-lint disable</m> followed by the rule id.
+	</description>
+
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Tom Whiston</metadata>
+		<metadata name="tag">mUnit</metadata>
+		<metadata name="tag">lint</metadata>
+		<metadata name="tag">testing</metadata>
+		<metadata name="tag">ci</metadata>
+	</metadatalist>
+
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="INLET_TYPE">
+			<digest>Messages: start, stop, lint, lint &lt;path&gt;, fix, fix &lt;path&gt;, folder &lt;path&gt;, root &lt;0|1&gt;, followfront &lt;0|1&gt;, status</digest>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="dictionary">
+			<digest>The findings of every lint, as a dictionary</digest>
+			<description>With <m>files</m>, <m>summary</m> (files, block, warn, errors), <m>findings</m> (rule, level, file, patchers, location, box, position, message; <m>patchers</m> lists the subpatchers on the way to the box and is empty at the top level) and <m>errors</m>, for building your own display.</description>
+		</outlet>
+		<outlet id="1" type="INLET_TYPE">
+			<digest>Messages from the server, e.g. started</digest>
+		</outlet>
+	</outletlist>
+
+	<!--ARGUMENTS-->
+	<objarglist>
+	</objarglist>
+
+	<!--MESSAGES-->
+	<methodlist>
+		<method name="start">
+			<digest>Watch the folder and lint everything in it once</digest>
+			<description>Happens by itself when the patch opens. The console says which config file applies and how many rules are active.</description>
+		</method>
+		<method name="stop">
+			<digest>Stop watching</digest>
+		</method>
+		<method name="lint">
+			<arglist>
+				<arg name="path" optional="1" type="symbol" />
+			</arglist>
+			<digest>Lint the whole folder again, or one file</digest>
+			<description>Without a path, the folder and the patch in front when it lies outside the folder (not with <at>followfront</at> <m>0</m>). A relative path is taken from the patch's folder.</description>
+		</method>
+		<method name="folder">
+			<arglist>
+				<arg name="path" type="symbol" />
+			</arglist>
+			<digest>Set the folder to watch at run time</digest>
+			<description>The same as <at>folder</at>, also as Max writes paths (from <o>opendialog</o> with <m>fold</m>, say) or <m>none</m>; takes effect at the next <m>start</m>. <m>root</m> 0 or 1 sets <at>root</at> the same way, and <m>followfront</m> 0 or 1 sets <at>followfront</at>.</description>
+		</method>
+		<method name="status">
+			<digest>Post what the front-patcher helper has seen</digest>
+			<description>How often it has polled, whether it is polling, and the last patch it saw in front. For checking why a patch outside the folder is not being linted.</description>
+		</method>
+		<method name="fix">
+			<arglist>
+				<arg name="path" optional="1" type="symbol" />
+			</arglist>
+			<digest>Apply the fixes the rules describe and write the files back</digest>
+			<description>Without a path, the whole folder and the patch in front when it lies outside the folder (not with <at>followfront</at> <m>0</m>); with one, that file (relative to the patch). Only the boxes with findings change; the rest of the file stays as Max saved it. Reopen a patch that was fixed while open, or Max will save its stale copy over the fix.</description>
+		</method>
+	</methodlist>
+
+	<!--ATTRIBUTES-->
+	<attributelist>
+		<attribute name="folder" get="1" set="1" type="symbol" size="1">
+			<digest>The folder to watch (default: the patch's own), or none</digest>
+			<description>Relative to the patch holding <o>mUnit.lint</o>; absolute paths work too. Subfolders are watched as well. <m>none</m> watches no folder: whatever patch is in front is linted when it is saved, with the <m>munit-lint.json</m> files in and above its own folder (or <m>mUnit:recommended</m> without any), and the console names the configs whenever they change from one patch to the next. A patch saved for the first time, or saved as a new file, is linted as soon as it comes to the front under its new name.</description>
+		</attribute>
+		<attribute name="root" get="1" set="1" type="int" size="1">
+			<digest>Whether the folder is the top of the config cascade (default 0)</digest>
+			<description>With 1, the search for <m>munit-lint.json</m> files stops at <at>folder</at>: the configs that apply to a patch are the ones from its own folder up to the folder, and nothing above, as if the folder's config said <m>"root": true</m>. Project mode: point <at>folder</at> at the root of your repository, and its config rules the whole project while subfolders add their own. Put <m>"root": true</m> in that config as well, so the command line agrees.</description>
+		</attribute>
+		<attribute name="followfront" get="1" set="1" type="int" size="1">
+			<digest>Whether the patch in front is linted when it lies outside the folder (default 1)</digest>
+			<description>With 1, the patch in front is linted when it is saved even when it lies outside <at>folder</at>, with the folder's configs, and <m>lint</m> and <m>fix</m> without a path take it in. With 0, only <at>folder</at> and the folders below it are linted, whatever else is open, so a project is checked the same way however you work. A path given to <m>lint</m> or <m>fix</m> is still linted. <at>folder</at> <m>none</m> needs 1, since without a folder the patch in front is all there is to lint.</description>
+		</attribute>
+		<attribute name="config" get="1" set="1" type="symbol" size="1">
+			<digest>One config file for everything (default: the munit-lint.json files in and above the folder, cascading)</digest>
+			<description>Relative to the patch. When it is not set, the <m>munit-lint.json</m> files that apply to each file are found from its folder upwards, up to one that says <m>"root": true</m>, and applied outermost first; the console says on start which are in force at <at>folder</at> and which its subfolders add. A patch in front outside the folder takes the folder's configs. A config names the rule sets and rule files, which files to lint, and per-file overrides, with every path relative to the config file. See "Linting patchers" in the package README.</description>
+		</attribute>
+		<attribute name="rules" get="1" set="1" type="symbol" size="-1">
+			<digest>Extra rule files, on top of the config</digest>
+			<description>Relative to the patch. The same as the command line's <m>--rules</m>.</description>
+		</attribute>
+	</attributelist>
+
+	<!--OUTPUT-->
+	<misc name="Output">
+		<entry name="dictionary">
+			<description>Out left outlet: the findings of every lint, as a dictionary with <m>files</m>, <m>summary</m> (files, block, warn, errors), <m>findings</m> (rule, level, file, patchers, location, box, position, message; <m>patchers</m> lists the subpatchers on the way to the box and is empty at the top level) and <m>errors</m>, for building your own display.</description>
+		</entry>
+		<entry name="anything">
+			<description>Out right outlet: the server's messages, e.g. <m>started</m> when the node script has booted.</description>
+		</entry>
+	</misc>
+
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="mUnit.handler" />
+		<seealso name="mUnit.harness" />
+		<seealso name="mUnit.loadbang" />
+	</seealsolist>
+
+</c74object>

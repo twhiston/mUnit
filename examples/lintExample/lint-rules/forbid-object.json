@@ -1,0 +1,9 @@
+{
+  "$schema": "../../../../lint-rules/rule.schema.json",
+  "id": "no-zl-reg",
+  "kind": "forbid-object",
+  "level": "block",
+  "match": { "object": "zl.reg" },
+  "message": "use [list.reg] instead of [zl.reg]",
+  "fix": { "replace": { "object": "list.reg", "args": "keep" } }
+}

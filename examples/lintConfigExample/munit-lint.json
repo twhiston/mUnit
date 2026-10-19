@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../lint-rules/config.schema.json",
+  "root": true,
+  "rules": [
+    "mUnit:recommended",
+    {
+      "id": "no-zl-reg",
+      "kind": "forbid-object",
+      "level": "warn",
+      "match": {
+        "object": "zl.reg"
+      },
+      "message": "use [list.reg] instead of [zl.reg]",
+      "fix": {
+        "replace": {
+          "object": "list.reg",
+          "args": "keep"
+        }
+      }
+    }
+  ],
+  "files": [
+    "project/**/*.maxpat"
+  ],
+  "ignore": [],
+  "overrides": [
+    {
+      "files": [
+        "project/legacy/**"
+      ],
+      "rules": {
+        "no-zl-reg": "off"
+      }
+    }
+  ]
+}

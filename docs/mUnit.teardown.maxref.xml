@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="mUnit.teardown" module="max" category="mUnit">
+
+	<digest>
+		Bang once the results are final, so a test patch can clean up
+	</digest>
+
+	<description>
+		<o>mUnit.teardown</o> is the counterpart of <o>mUnit.loadbang</o>: it bangs once <o>mUnit.handler</o> has frozen the results of the patch it is in, so the patch can clean up (stop a metro or DSP, close a file, reset a global). In the usual case, every patch open at once, it fires after the result files are written, before <o>mUnit.harness</o> closes the patches or the command-line runner quits Max. With <o>mUnit.harness</o> in sequential mode it fires after the patch's asserts have settled and before that patch is closed, while the suite goes on. Either way the results are already final: a teardown can't change a verdict. The handler waits for every teardown to report done before it goes on, up to <m>teardownMs</m> (default 2000 ms), and warns in the console about any that didn't. By default an object reports done as soon as its outlet has fired; with <at>hold</at> it waits for a message on its inlet instead. Console errors while teardowns run are kept in the log but never fail the suite. Don't drive asserts from a teardown.
+	</description>
+
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Tom Whiston</metadata>
+		<metadata name="tag">mUnit</metadata>
+		<metadata name="tag">testing</metadata>
+		<metadata name="tag">unit test</metadata>
+		<metadata name="tag">teardown</metadata>
+	</metadatalist>
+
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="INLET_TYPE">
+			<digest>With @hold 1: any message reports the cleanup done</digest>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="bang">
+			<digest>Bang once the results of this patch are final</digest>
+		</outlet>
+	</outletlist>
+
+	<!--ARGUMENTS-->
+	<objarglist>
+	</objarglist>
+
+	<!--MESSAGES-->
+	<methodlist>
+		<method name="anything">
+			<arglist />
+			<digest>Report the cleanup done (with @hold 1)</digest>
+			<description>With <at>hold</at> 1, any message (<m>done</m> by convention) tells the handler this teardown has finished. Without <at>hold</at>, the inlet does nothing.</description>
+		</method>
+	</methodlist>
+
+	<!--ATTRIBUTES-->
+	<attributelist>
+		<attribute name="hold" get="1" set="1" type="int" size="1">
+			<digest>Wait for a message on the inlet before reporting done (default 0)</digest>
+			<description>For cleanup that takes time. The handler waits up to <m>teardownMs</m>; if the message never comes it goes on anyway and warns.</description>
+		</attribute>
+	</attributelist>
+
+	<!--OUTPUT-->
+	<misc name="Output">
+		<entry name="bang">
+			<description>Out the outlet: a bang once the results of this patch are final, so the patch can clean up (stop DSP, close files, reset a global).</description>
+		</entry>
+	</misc>
+
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="mUnit.loadbang" />
+		<seealso name="mUnit.handler" />
+		<seealso name="mUnit.harness" />
+		<seealso name="closebang" />
+		<seealso name="freebang" />
+	</seealsolist>
+
+</c74object>

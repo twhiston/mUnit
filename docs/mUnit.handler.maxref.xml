@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="mUnit.handler" module="max" category="mUnit">
+
+	<digest>
+		Run a suite of mUnit asserts and write the results
+	</digest>
+
+	<description>
+		<o>mUnit.handler</o> orchestrates a suite of tests: it registers every <o>mUnit.assert</o> and <o>mUnit.assert~</o> that loads, collects their verdicts, and writes the results and the captured Max console when the run finishes. A run finishes exactly once: when every registered assert has reported and no assert has registered or reported for <m>settleMs</m>, or when <m>suiteTimeout</m> expires, in which case every unfinished assert is reported as failed, so a CI run always ends. Each assert is posted to the Max console as it finishes (<m>ok</m>, <m>FAIL</m> with the reason, or <m>skip</m>). The result files (<m>results.json</m>, or <m>results.xml</m> with the JUnit formatter, and <m>log.txt</m>) are fully written, the <o>mUnit.teardown</o> hooks have run and the DSP settings are restored before the right outlet bangs. The handler needs a configuration before the tests start: <o>mUnit.harness</o> reads <m>munit.config.js</m> from its patch's folder, or send a dict with the <m>configure</m> message. The left outlet bangs when the handler is ready, which is also what fires every <o>mUnit.loadbang</o>. Keep one handler open at a time: asserts register with whichever handler is running. The command-line runner (<m>munit run</m>, from the munit-cli npm package or <m>javascript/nodejs/runner/munit-cli.js</m> in this package) starts Max, runs a suite, quits Max and exits with a code for CI.
+	</description>
+
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Tom Whiston</metadata>
+		<metadata name="tag">mUnit</metadata>
+		<metadata name="tag">testing</metadata>
+		<metadata name="tag">unit test</metadata>
+		<metadata name="tag">ci</metadata>
+		<metadata name="tag">junit</metadata>
+	</metadatalist>
+
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="INLET_TYPE">
+			<digest>Configuration and control messages</digest>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="bang">
+			<digest>Bang when the handler is ready and the tests may start</digest>
+			<description>Sent once the handler has started and been configured. <o>mUnit.loadbang</o> fires at the same moment, in every open patch.</description>
+		</outlet>
+		<outlet id="1" type="bang">
+			<digest>Bang when the suite has finished and the results are written</digest>
+		</outlet>
+	</outletlist>
+
+	<!--ARGUMENTS-->
+	<objarglist>
+	</objarglist>
+
+	<!--MESSAGES-->
+	<methodlist>
+		<method name="configure">
+			<arglist>
+				<arg name="dictionary" optional="0" type="dictionary" />
+			</arglist>
+			<digest>Configure from a dict</digest>
+			<description>The dict holds the same keys as <m>munit.config.js</m>: <m>logFormatter</m>, <m>resultFormatter</m> ("Json", "JUnit" or "Html"), <m>ignoreConsoleErrors</m>, <m>logOutputFilters</m>, <m>logObjectFilters</m>, <m>outputDir</m>, <m>settleMs</m>, <m>suiteTimeout</m>, <m>teardownMs</m>, <m>dsp</m>, <m>runFolder</m>, <m>takeReferences</m> and <m>forbidOnly</m>. A dict has no folder to resolve relative paths against, so <m>outputDir</m> must be absolute (a leading <m>~</m> is expanded). An invalid configuration is rejected with a message in the Max console that says what is wrong, and the tests do not start; unknown keys are reported as warnings. Send it as <m>configure</m> followed by the dict, e.g. through <o>prepend</o>.</description>
+		</method>
+		<method name="takeReferences">
+			<arglist>
+				<arg name="on" optional="1" type="int" />
+			</arglist>
+			<digest>Take references on or off</digest>
+			<description>With no argument or a non-zero one, the asserts that register next take their references: snapshots and reference comparisons write what they get as their reference, and pass. 0 switches it off. The same as <m>munit run --take-references</m> or <m>takeReferences: true</m> in the configuration.</description>
+		</method>
+		<method name="reset">
+			<arglist />
+			<digest>Forget the current run and start a new one</digest>
+			<description>Clears the registrations, results and log, keeps the configuration, and announces ready again. <o>mUnit.harness</o> sends it when it runs again.</description>
+		</method>
+		<method name="hydrateConfiguration">
+			<arglist>
+				<arg name="folder" optional="0" type="symbol" />
+			</arglist>
+			<digest>Load munit.config.js from a folder</digest>
+			<description>Sent by <o>mUnit.harness</o>. The file is read fresh each time, so edits apply without restarting node.script; without the file, the defaults apply.</description>
+		</method>
+		<method name="start">
+			<arglist />
+			<digest>Internal: the ready broadcast has gone out</digest>
+			<description>Sent by the handler patcher itself; opens the settle window that ends the suite.</description>
+		</method>
+		<method name="hold">
+			<arglist />
+			<digest>Internal: hold the run open (sequential harness)</digest>
+			<description>Sent by <o>mUnit.harness</o> in sequential mode, with <m>mark</m> as each patch opens and <m>done</m> when all have run.</description>
+		</method>
+	</methodlist>
+
+	<!--ATTRIBUTES-->
+	<attributelist>
+	</attributelist>
+
+	<!--MISC-->
+	<misc name="Configuration keys">
+		<entry name="logFormatter, resultFormatter">
+			<description>"Txt" for the log; "Json" (default), "JUnit" or "Html" for the results, or a formatter object with render() and fileExtension(); a list of these writes one results file each. JUnit writes one testsuite per @suite, with failures, skips and attachments linked for CI.</description>
+		</entry>
+		<entry name="outputDir, runFolder">
+			<description>Where the files go (default: logs/ next to munit.config.js). With runFolder, each run writes to a timestamped subfolder. Files an assert keeps with a failure go to artifacts/&lt;uuid&gt;/.</description>
+		</entry>
+		<entry name="settleMs, suiteTimeout, teardownMs">
+			<description>Quiet time that ends the suite (default 1000); the watchdog (default 300000, 0 disables); how long to wait for mUnit.teardown hooks (default 2000, 0 doesn't wait).</description>
+		</entry>
+		<entry name="ignoreConsoleErrors, logOutputFilters, logObjectFilters">
+			<description>With ignoreConsoleErrors false, any error in the Max console fails the suite (default true). Output filters are regexes whose matching lines are left out of the written log; object filters name Max objects whose console output is not captured (default ["node.script"]).</description>
+		</entry>
+		<entry name="dsp">
+			<description>{ driver, sr, vs, settleMs }: audio settings applied when the suite starts, with DSP switched on, and restored after the teardowns. "NonRealTime" needs no hardware and renders as fast as the machine can.</description>
+		</entry>
+		<entry name="takeReferences, forbidOnly">
+			<description>Take references: snapshots and reference comparisons write what they get, and pass; fail the suite if any assert has @only.</description>
+		</entry>
+	</misc>
+
+	<!--OUTPUT-->
+	<misc name="Output">
+		<entry name="bang">
+			<description>Out left outlet: a bang once the handler has started and been configured, so the tests may start. <o>mUnit.loadbang</o> fires at the same moment, in every open patch.</description>
+		</entry>
+		<entry name="bang">
+			<description>Out right outlet: a bang when the suite has finished and the result files are written.</description>
+		</entry>
+	</misc>
+
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="mUnit.harness" />
+		<seealso name="mUnit.assert" />
+		<seealso name="mUnit.assert~" />
+		<seealso name="mUnit.loadbang" />
+		<seealso name="mUnit.teardown" />
+		<seealso name="node.script" />
+	</seealsolist>
+
+</c74object>

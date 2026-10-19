@@ -1,0 +1,28 @@
+{
+  "$schema": "./rule.schema.json",
+  "rules": [
+    {
+      "id": "fanout-without-trigger",
+      "kind": "fanout-without-trigger",
+      "level": "warn",
+      "allow": [
+        "loadbang",
+        "mUnit.loadbang",
+        "mUnit.harness"
+      ]
+    },
+    {
+      "id": "overlapping-boxes",
+      "kind": "overlapping-boxes",
+      "level": "warn",
+      "allow": [
+        "panel"
+      ],
+      "scope": {
+        "namespace": [
+          "*"
+        ]
+      }
+    }
+  ]
+}

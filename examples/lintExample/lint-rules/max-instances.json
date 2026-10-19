@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../../lint-rules/rule.schema.json",
+  "id": "one-metro",
+  "kind": "max-instances",
+  "level": "warn",
+  "match": { "object": "metro" },
+  "max": 1,
+  "per": "patcher",
+  "message": "one [metro] per patcher: drive everything from one clock"
+}

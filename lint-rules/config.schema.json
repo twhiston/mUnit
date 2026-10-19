@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "mUnit lint config (munit-lint.json)",
+  "description": "Which rules apply, which files are linted, and per-file overrides of rule levels. Configs cascade: every munit-lint.json in a file's folder and the folders above it applies, outermost first, up to one with \"root\": true. Paths are relative to this file's folder. See \"Linting patchers\" in the mUnit README.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "The schema of this file, for editor completion: the path of lint-rules/config.schema.json in the mUnit package, relative to this file."
+    },
+    "rules": {
+      "type": "array",
+      "description": "The rules in force: built-in sets (\"mUnit:recommended\", \"mUnit:tests\"), rule files or globs relative to this file (\"./lint-rules/*.json\"), and rules written inline. Default [\"mUnit:recommended\"]. A rule with an id already seen in an outer config replaces it.",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string",
+            "description": "A built-in set (\"mUnit:recommended\", \"mUnit:tests\"), or a rule file or glob relative to this file."
+          },
+          {
+            "$ref": "rule.schema.json#/$defs/rule"
+          }
+        ]
+      }
+    },
+    "files": {
+      "description": "Which files are linted, as globs relative to this file. Default: every .maxpat, .maxhelp, .gendsp and .rnbopat. An inner config's list replaces an outer one's.",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "ignore": {
+      "description": "Files that are never linted, as globs relative to this file. Each config's patterns add to the outer ones.",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "overrides": {
+      "type": "array",
+      "description": "Per-file rule levels, applied after the outer configs' overrides; later entries win.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "description": "Which files the override applies to, as globs relative to this file. Left out: every file under this config.",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "rules": {
+            "type": "object",
+            "description": "Rule ids and the level each gets for these files.",
+            "additionalProperties": {
+              "description": "What a finding does: \"warn\" is reported, \"block\" is reported and makes `munit lint` exit 1 (fails CI), \"off\" turns the rule off. Default \"warn\".",
+              "enum": [
+                "off",
+                "warn",
+                "block"
+              ]
+            }
+          }
+        },
+        "required": [
+          "rules"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "root": {
+      "type": "boolean",
+      "description": "true: stop looking for configs in the folders above this one, so nothing outside the project changes its results. Default false."
+    }
+  },
+  "additionalProperties": false
+}

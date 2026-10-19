@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="mUnit.harness" module="max" category="mUnit">
+
+	<digest>
+		Configure mUnit.handler from munit.config.js and open a folder of test patches
+	</digest>
+
+	<description>
+		<o>mUnit.harness</o> points <o>mUnit.handler</o> at your <m>munit.config.js</m> and, with <at>loadFolder</at>, opens a folder of test patches, so one patch runs a whole suite. Connect its outlet to the handler's inlet. It runs when its patch opens; the patch must be saved, since its folder is where the configuration and the tests are found. Without <at>loadFolder</at> it only loads the configuration. By default every matching test patch is opened at once and closed when the suite has finished; with <at>sequential</at> they run one at a time. The test patches need no handler or harness of their own: their asserts register with the running handler, and <o>mUnit.loadbang</o> fires in each once the handler is ready.
+	</description>
+
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Tom Whiston</metadata>
+		<metadata name="tag">mUnit</metadata>
+		<metadata name="tag">testing</metadata>
+		<metadata name="tag">unit test</metadata>
+		<metadata name="tag">ci</metadata>
+	</metadatalist>
+
+	<!--INLETS-->
+	<inletlist>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="INLET_TYPE">
+			<digest>Messages for mUnit.handler; connect to its inlet</digest>
+			<description>Sends <m>hydrateConfiguration</m>, <m>reset</m> and, in sequential mode, <m>hold</m>, <m>mark</m> and <m>done</m>.</description>
+		</outlet>
+	</outletlist>
+
+	<!--ARGUMENTS-->
+	<objarglist>
+	</objarglist>
+
+	<!--MESSAGES-->
+	<methodlist>
+	</methodlist>
+
+	<!--ATTRIBUTES-->
+	<attributelist>
+		<attribute name="loadFolder" get="1" set="1" type="symbol" size="1">
+			<digest>The folder of test patches</digest>
+			<description>Relative to the harness's patch; absolute paths work too. Every file matching <at>pattern</at> is opened. Without it, only the configuration is loaded.</description>
+		</attribute>
+		<attribute name="configFolder" get="1" set="1" type="symbol" size="1">
+			<digest>The folder with munit.config.js (default: the patch's folder)</digest>
+			<description>Relative to the harness's patch. The file is read fresh each time the patch opens; without it, the defaults apply and the results go to <m>logs/</m> in that folder.</description>
+		</attribute>
+		<attribute name="pattern" get="1" set="1" type="symbol" size="1">
+			<digest>Which files are tests (default *.maxpat)</digest>
+			<description>A glob: <m>*</m> and <m>?</m> work, e.g. <m>test_*.maxpat</m>. Files starting with a dot are skipped.</description>
+		</attribute>
+		<attribute name="recursive" get="1" set="1" type="int" size="1">
+			<digest>Also search subfolders (default 0)</digest>
+		</attribute>
+		<attribute name="sequential" get="1" set="1" type="int" size="1">
+			<digest>Open one test patch at a time (default 0)</digest>
+			<description>Opens a patch, waits until its asserts have finished, closes it, then opens the next. Slower, but patches can't interfere with each other through shared <o>send</o>/<o>receive</o> names, DSP state or CPU load. Each patch's <o>mUnit.teardown</o> fires before that patch is closed; the result files are written once at the end.</description>
+		</attribute>
+	</attributelist>
+
+	<!--OUTPUT-->
+	<misc name="Output">
+		<entry name="anything">
+			<description>Out the outlet: messages for <o>mUnit.handler</o>; connect it to the handler's inlet. Sends <m>hydrateConfiguration</m>, <m>reset</m> and, in sequential mode, <m>hold</m>, <m>mark</m> and <m>done</m>.</description>
+		</entry>
+	</misc>
+
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="mUnit.handler" />
+		<seealso name="mUnit.assert" />
+		<seealso name="mUnit.loadbang" />
+		<seealso name="mUnit.teardown" />
+	</seealsolist>
+
+</c74object>

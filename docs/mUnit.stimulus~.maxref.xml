@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="mUnit.stimulus~" module="msp" category="mUnit">
+
+	<digest>
+		Generate a repeatable test signal for an mUnit.assert~ capture
+	</digest>
+
+	<description>
+		<o>mUnit.stimulus~</o> makes a test signal that is the same on every run: a sine, an impulse, a linear sweep, seeded white noise, silence, or a sound file played once. It starts when the suite starts (<at>trigger</at> auto, the default) or on a <m>bang</m> (<at>trigger</at> manual), at the same moment as an <o>mUnit.assert~</o> capture, and <m>stop</m> stops it. Everything but the file is computed sample by sample from a counter in <o>gen~</o>, so two runs give the same samples whatever the vector size. Put the unit under test between it and <o>mUnit.assert~</o>.
+	</description>
+
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Tom Whiston</metadata>
+		<metadata name="tag">mUnit</metadata>
+		<metadata name="tag">testing</metadata>
+		<metadata name="tag">unit test</metadata>
+		<metadata name="tag">MSP</metadata>
+	</metadatalist>
+
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="bang">
+			<digest>bang starts the signal; stop stops it</digest>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="signal">
+			<digest>The test signal</digest>
+		</outlet>
+	</outletlist>
+
+	<!--ARGUMENTS-->
+	<objarglist>
+	</objarglist>
+
+	<!--MESSAGES-->
+	<methodlist>
+		<method name="bang">
+			<arglist />
+			<digest>Start the signal</digest>
+			<description>Starts the signal from its first sample (or the sound file from its start). With <at>trigger</at> auto the suite start does this for you; with <at>trigger</at> manual send the same <m>bang</m> to the <o>mUnit.assert~</o> that captures it.</description>
+		</method>
+		<method name="stop">
+			<arglist />
+			<digest>Stop the signal</digest>
+			<description>Outputs silence until the next <m>bang</m>.</description>
+		</method>
+	</methodlist>
+
+	<!--ATTRIBUTES-->
+	<attributelist>
+		<attribute name="type" get="1" set="1" type="symbol" size="1">
+			<digest>The kind of signal (default sine)</digest>
+			<description><m>sine</m> at <at>freq</at> Hz and <at>amp</at>; <m>impulse</m>, one sample of <at>amp</at> then silence; <m>sweep</m>, a linear sweep from <at>freq</at> to <at>freq2</at> over <at>duration</at> ms; <m>noise</m>, white noise from <at>seed</at>; <m>silence</m>; <m>file</m>, the sound file <at>file</at> played once.</description>
+			<attributelist>
+				<attribute name="enumvals" get="1" set="1" type="atom" size="6">
+					<enumlist>
+						<enum name="sine"><digest>A sine at @freq Hz</digest></enum>
+						<enum name="impulse"><digest>One sample of @amp, then silence</digest></enum>
+						<enum name="sweep"><digest>A linear sweep from @freq to @freq2 over @duration ms</digest></enum>
+						<enum name="noise"><digest>White noise from @seed, the same every run</digest></enum>
+						<enum name="silence"><digest>Silence</digest></enum>
+						<enum name="file"><digest>The sound file @file, played once</digest></enum>
+					</enumlist>
+				</attribute>
+				<attribute name="style" get="1" set="1" type="symbol" size="1" value="enum" />
+			</attributelist>
+		</attribute>
+		<attribute name="freq" get="1" set="1" type="float" size="1">
+			<digest>The frequency in Hz (default 440), or the start of a sweep</digest>
+		</attribute>
+		<attribute name="freq2" get="1" set="1" type="float" size="1">
+			<digest>The end frequency of a sweep in Hz (default 2000)</digest>
+		</attribute>
+		<attribute name="amp" get="1" set="1" type="float" size="1">
+			<digest>The amplitude, 0 to 1 (default 1)</digest>
+		</attribute>
+		<attribute name="seed" get="1" set="1" type="int" size="1">
+			<digest>The seed of the noise (default 1)</digest>
+			<description>The same seed gives the same samples on every run and every machine.</description>
+		</attribute>
+		<attribute name="duration" get="1" set="1" type="float" size="1">
+			<digest>How long a sweep takes, in ms (default 1000)</digest>
+		</attribute>
+		<attribute name="file" get="1" set="1" type="symbol" size="1">
+			<digest>The sound file for @type file</digest>
+			<description>A file on the search path, loaded into the object's own <o>buffer~</o> and played once from the start.</description>
+		</attribute>
+		<attribute name="trigger" get="1" set="1" type="symbol" size="1">
+			<digest>What starts the signal: auto or manual (default auto)</digest>
+			<description><m>auto</m>: when the suite starts, at the moment <o>mUnit.loadbang</o> fires. <m>manual</m>: on a <m>bang</m>.</description>
+			<attributelist>
+				<attribute name="enumvals" get="1" set="1" type="atom" size="2">
+					<enumlist>
+						<enum name="auto"><digest>When the suite starts</digest></enum>
+						<enum name="manual"><digest>On a bang</digest></enum>
+					</enumlist>
+				</attribute>
+				<attribute name="style" get="1" set="1" type="symbol" size="1" value="enum" />
+			</attributelist>
+		</attribute>
+	</attributelist>
+
+	<!--OUTPUT-->
+	<misc name="Output">
+		<entry name="signal">
+			<description>Out the outlet: the test signal, for the object under test.</description>
+		</entry>
+	</misc>
+
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="mUnit.assert~" />
+		<seealso name="mUnit.loadbang" />
+		<seealso name="gen~" />
+		<seealso name="cycle~" />
+		<seealso name="noise~" />
+	</seealsolist>
+
+</c74object>

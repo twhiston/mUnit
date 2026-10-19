@@ -1,0 +1,8 @@
+{
+  "$schema": "../../../lint-rules/config.schema.json",
+  "root": true,
+  "rules": ["mUnit:tests", "./lint-rules/*.json"],
+  "overrides": [
+    { "files": ["tests/**"], "rules": { "fanout-without-trigger": "block" } }
+  ]
+}

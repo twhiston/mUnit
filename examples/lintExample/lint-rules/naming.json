@@ -1,0 +1,9 @@
+{
+  "$schema": "../../../../lint-rules/rule.schema.json",
+  "id": "send-names",
+  "kind": "naming",
+  "level": "warn",
+  "target": "send-receive",
+  "pattern": "^[a-z][a-z0-9_]*$",
+  "message": "send and receive names are lower_snake_case in this project"
+}

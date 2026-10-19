@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../../lint-rules/rule.schema.json",
+  "id": "v8-autowatch",
+  "kind": "require-attribute",
+  "level": "warn",
+  "match": { "object": ["v8", "js"] },
+  "attribute": "autowatch",
+  "message": "say whether this script reloads when its file changes: @autowatch 0 for a shipped patch",
+  "fix": { "set": 0 }
+}

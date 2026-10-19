@@ -1,0 +1,11 @@
+{
+  "$schema": "../../../lint-rules/rule.schema.json",
+  "id": "named-print",
+  "kind": "forbid-object",
+  "level": "warn",
+  "match": {
+    "object": "print",
+    "text": "^print$"
+  },
+  "message": "give [print] a name, so a console line says where it came from"
+}

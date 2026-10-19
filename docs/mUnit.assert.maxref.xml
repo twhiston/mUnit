@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="mUnit.assert" module="max" category="mUnit">
+
+	<digest>
+		Check inputs against a JavaScript expression, as a test in an mUnit suite
+	</digest>
+
+	<description>
+		<o>mUnit.assert</o> is the test object of mUnit. It receives inputs on its data inlets and evaluates a JavaScript expression over them: the expression refers to the inputs as <m>in1</m> to <m>in10</m>, and passes when it returns exactly <m>true</m>. The verdict is reported to <o>mUnit.handler</o>, which writes the results of the whole suite, and the box turns green (passed), red (failed) or yellow (skipped). Ints, floats, symbols, lists, dicts and Jitter matrices are all passed to the expression as values, so <m>in1 === 'foo'</m>, <m>in1.length === 3</m>, <m>in1.name === 'munit'</m> and <m>in1.dim[0] == 64</m> all work. Helpers such as <m>approx</m>, <m>equals</m>, <m>snapshot</m>, <m>rms</m> and <m>planeMean</m> report expected and actual values when they fail. Instead of an expression, the name of a JavaScript file makes a custom assert. The object keeps as many data inlets as the highest <m>inN</m> the expression uses, up to 10; the first inlet is reserved for the framework. Feed the inputs from <o>mUnit.loadbang</o>, not <o>loadbang</o>, so they are not sent before the handler is ready. <o>assert</o> is an alias kept for old patches.
+	</description>
+
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Tom Whiston</metadata>
+		<metadata name="tag">mUnit</metadata>
+		<metadata name="tag">testing</metadata>
+		<metadata name="tag">unit test</metadata>
+		<metadata name="tag">assert</metadata>
+	</metadatalist>
+
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="INLET_TYPE">
+			<digest>Framework control; do not send test inputs here</digest>
+			<description>Used by the mUnit framework. Values sent here are ignored with a warning.</description>
+		</inlet>
+		<inlet id="1" type="INLET_TYPE">
+			<digest>in1: the hot input</digest>
+			<description>A value here evaluates the expression with the latest values of the other inputs. A <m>bang</m> evaluates again with the stored values.</description>
+		</inlet>
+		<inlet id="2" type="INLET_TYPE">
+			<digest>in2 to in10: cold inputs</digest>
+			<description>Stored until the next evaluation. The object keeps as many of these inlets as the expression uses (<at>dataInlets</at> for custom asserts).</description>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+	</outletlist>
+
+	<!--ARGUMENTS-->
+	<objarglist>
+		<objarg name="expression" optional="1" type="symbol">
+			<digest>The JavaScript expression, or the name of a custom assert script</digest>
+			<description>
+				Any JavaScript expression over <m>in1</m> to <m>in10</m>; the default is <m>in1 === 1</m>. Quote an expression that contains commas, e.g. <m>"approx(in1, 0.5, 0.001)"</m>, so Max keeps it as one argument, and write string literals with single quotes, since Max strips double quotes from the arguments of an object box. A name ending in <m>.js</m> loads a custom assert: a script on the search path that exports a function taking the inputs as an array and returning a <m>State</m> from <m>libmunit</m> (<m>Success</m>, <m>Fail</m>, <m>Continue</m>, <m>Skipped</m>), or <m>{ state, expected, actual, message, attachments }</m>.
+			</description>
+		</objarg>
+	</objarglist>
+
+	<!--MESSAGES-->
+	<methodlist>
+		<method name="bang">
+			<arglist />
+			<digest>Evaluate again with the stored inputs</digest>
+			<description>In the <m>in1</m> inlet: evaluates the expression with the stored values of every input. Counts as a call.</description>
+		</method>
+		<method name="int">
+			<arglist>
+				<arg name="value" optional="0" type="int" />
+			</arglist>
+			<digest>An input</digest>
+			<description>In a data inlet: the input for that inlet. In <m>in1</m> it also evaluates the expression.</description>
+		</method>
+		<method name="float">
+			<arglist>
+				<arg name="value" optional="0" type="float" />
+			</arglist>
+			<digest>An input</digest>
+			<description>In a data inlet: the input for that inlet. In <m>in1</m> it also evaluates the expression.</description>
+		</method>
+		<method name="list">
+			<arglist>
+				<arg name="values" optional="0" type="list" />
+			</arglist>
+			<digest>A list input, seen by the expression as an array</digest>
+			<description>In a data inlet: the input for that inlet, as a JavaScript array, so <m>in1.length</m>, <m>in1[0]</m>, <m>equals(in1, [1, 2, 3])</m> and the measures (<m>rms</m>, <m>peak</m>, <m>dc</m>, <m>maxDiff</m>, <m>snr</m>) apply.</description>
+		</method>
+		<method name="anything">
+			<arglist>
+				<arg name="symbol" optional="0" type="symbol" />
+			</arglist>
+			<digest>A symbol input</digest>
+			<description>In a data inlet: a symbol (or a symbol followed by values, as a list) is the input for that inlet. Compare it with single quotes: <m>in1 === 'foo'</m>.</description>
+		</method>
+		<method name="dictionary">
+			<arglist>
+				<arg name="name" optional="0" type="symbol" />
+			</arglist>
+			<digest>A dict input, seen by the expression as an object</digest>
+			<description>In a data inlet: the dict's contents, as a plain JavaScript object: <m>in1.name === 'munit'</m>, <m>equals(in1, {...})</m> or <m>snapshot(in1)</m>.</description>
+		</method>
+		<method name="jit_matrix">
+			<arglist>
+				<arg name="name" optional="0" type="symbol" />
+			</arglist>
+			<digest>A Jitter matrix input</digest>
+			<description>In a data inlet: the matrix as a value with <m>dim</m>, <m>planes</m>, <m>type</m> and every cell, for <m>planeMin</m>, <m>planeMean</m>, <m>planeMax</m>, <m>cell</m> and <m>sameMatrix</m>, or for comparison with a <at>reference</at> file. Char cells are 0 to 255.</description>
+		</method>
+	</methodlist>
+
+	<!--ATTRIBUTES-->
+	<attributelist>
+		<attribute name="maxCalls" get="1" set="1" type="int" size="1">
+			<digest>How many inputs the assert evaluates (default 1)</digest>
+			<description>An expression assert fails once it has been false this many times; a custom assert passes once it reaches this many calls without failing. After the verdict, further inputs are ignored and logged.</description>
+		</attribute>
+		<attribute name="every" get="1" set="1" type="int" size="1">
+			<digest>Every call must be true (default 0)</digest>
+			<description>Expression asserts: every call must be true, up to <at>maxCalls</at>, instead of any one of them. With <at>maxCalls</at> this checks a table of cases; it fails on the first false case and says which call it was.</description>
+		</attribute>
+		<attribute name="tolerance" get="1" set="1" type="int" size="1">
+			<digest>How many failing calls are tolerated (default 0)</digest>
+			<description>Custom and <at>every</at> asserts: how many <m>Fail</m> results are tolerated before the assert fails.</description>
+		</attribute>
+		<attribute name="timeout" get="1" set="1" type="float" size="1">
+			<digest>How long the assert may take, in ms (default none)</digest>
+			<description>The clock starts when the suite starts (when <o>mUnit.loadbang</o> fires) or at the first input, whichever comes first. A timeout counts as a failed call and the clock restarts until <at>maxCalls</at> is reached, so <m>@timeout 2000 @maxCalls 3</m> allows up to 6 seconds. Values of 0 or less are rejected.</description>
+		</attribute>
+		<attribute name="accumulate" get="1" set="1" type="int" size="1">
+			<digest>Sum the inputs over the calls before evaluating (default 0)</digest>
+			<description>Expression asserts only: each input is summed (or, for symbols, concatenated) over successive calls before the expression sees it.</description>
+		</attribute>
+		<attribute name="skip" get="1" set="1" type="int" size="1">
+			<digest>Report the assert as skipped (default 0)</digest>
+			<description>The assert is reported as skipped without being evaluated, and its box turns yellow. Skipped asserts neither pass nor fail the suite.</description>
+		</attribute>
+		<attribute name="only" get="1" set="1" type="int" size="1">
+			<digest>Skip every other assert in the suite (default 0)</digest>
+			<description>When any assert in the suite has <at>only</at>, every other one is reported as skipped. Set <m>forbidOnly: true</m> in the configuration on CI, so one can't be committed by mistake.</description>
+		</attribute>
+		<attribute name="name" get="1" set="1" type="symbol" size="1">
+			<digest>A name for the test (default: its UUID)</digest>
+			<description>Used in the console, the log and the results. Every assert also has a UUID, which changes on each run and appears in all logging. A <m>snapshot</m> uses the name for its reference file.</description>
+		</attribute>
+		<attribute name="suite" get="1" set="1" type="symbol" size="1">
+			<digest>The suite the test belongs to (default: the parent patcher's name)</digest>
+			<description>Groups tests in the results; each suite becomes a <m>testsuite</m> in JUnit output.</description>
+		</attribute>
+		<attribute name="dataInlets" get="1" set="1" type="int" size="1">
+			<digest>How many data inlets a custom assert keeps (default 1)</digest>
+			<description>Custom asserts only: a script can't say how many inputs it needs, so set this. Expression asserts count their own.</description>
+		</attribute>
+		<attribute name="reference" get="1" set="1" type="symbol" size="1">
+			<digest>A Jitter matrix file to compare the input with</digest>
+			<description>The name of a <m>.jxf</m> file in <m>references/</m> next to the test patch. The matrix on <m>in1</m> is compared with it instead of evaluating an expression, within <at>maxDiff</at> and <at>maxFraction</at>. A missing reference fails and says how to take it; when taking references (<m>munit run --take-references</m>, <m>takeReferences: true</m> in the configuration, or a <m>takeReferences 1</m> message to <o>mUnit.handler</o>) the matrix is written as the reference. A failure keeps the matrix as <m>actual.jxf</m> and <m>actual.png</m>, the difference as <m>diff.png</m>, and links the reference.</description>
+		</attribute>
+		<attribute name="maxDiff" get="1" set="1" type="float" size="1">
+			<digest>The largest difference a cell may have from the reference (default 0)</digest>
+			<description>In the matrix's units: 0 to 255 for char. Used with <at>reference</at> and by <m>sameMatrix</m>.</description>
+		</attribute>
+		<attribute name="maxFraction" get="1" set="1" type="float" size="1">
+			<digest>The largest fraction of cells that may exceed maxDiff (default 0)</digest>
+			<description><m>@maxDiff 2 @maxFraction 0.001</m> is the perceptual rule "at most 0.1% of pixels differ by more than 2/255", which GPU output needs, since drivers differ.</description>
+		</attribute>
+	</attributelist>
+
+	<!--MISC-->
+	<misc name="Expression helpers">
+		<entry name="approx(actual, expected, abs = 1e-6, rel = 0)">
+			<description>Numbers, lists or dicts match, numbers within <m>max(abs, rel * abs(expected))</m>.</description>
+		</entry>
+		<entry name="equals(actual, expected)">
+			<description>Lists, dicts and symbols match exactly, dict keys in any order.</description>
+		</entry>
+		<entry name="snapshot(actual, name?)">
+			<description>The value matches <m>references/&lt;name&gt;.json</m> next to the test patch; the name defaults to <at>name</at>. Written when taking references.</description>
+		</entry>
+		<entry name="rms(x), peak(x), dc(x), maxDiff(a, e), snr(a, reference)">
+			<description>Measures over a list of numbers: root mean square, largest absolute value, mean, largest difference, and signal-to-noise ratio in dB.</description>
+		</entry>
+		<entry name="planeMin(m, plane), planeMean(m, plane), planeMax(m, plane), cell(m, x, y, plane?), sameMatrix(a, e, maxDiff, maxFraction)">
+			<description>Statistics of a Jitter matrix's plane (planes from 0), one cell (or all its planes), and a comparison of two matrices with tolerances that reports the differences.</description>
+		</entry>
+	</misc>
+
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="mUnit.assert~" />
+		<seealso name="mUnit.handler" />
+		<seealso name="mUnit.harness" />
+		<seealso name="mUnit.loadbang" />
+		<seealso name="mUnit.teardown" />
+	</seealsolist>
+
+</c74object>

@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../../../lint-rules/config.schema.json",
+  "overrides": [
+    {
+      "rules": {
+        "no-zl-reg": "block"
+      }
+    }
+  ]
+}

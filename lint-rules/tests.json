@@ -1,0 +1,31 @@
+{
+  "$schema": "./rule.schema.json",
+  "rules": [
+    {
+      "id": "one-handler-per-file",
+      "kind": "max-instances",
+      "level": "block",
+      "match": {
+        "object": "mUnit.handler"
+      },
+      "max": 1,
+      "per": "file",
+      "message": "a test patch may contain one [mUnit.handler]; a second one would collect the same results twice"
+    },
+    {
+      "id": "use-munit-loadbang",
+      "kind": "forbid-object",
+      "level": "block",
+      "match": {
+        "object": "loadbang"
+      },
+      "message": "a test patch must use [mUnit.loadbang], which waits for the handler to be ready, instead of [loadbang]",
+      "fix": {
+        "replace": {
+          "object": "mUnit.loadbang",
+          "args": "drop"
+        }
+      }
+    }
+  ]
+}

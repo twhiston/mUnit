@@ -1,0 +1,7 @@
+{
+  "$schema": "../../../../lint-rules/rule.schema.json",
+  "id": "fanout-without-trigger",
+  "kind": "fanout-without-trigger",
+  "level": "warn",
+  "allow": ["loadbang", "mUnit.loadbang", "mUnit.harness"]
+}

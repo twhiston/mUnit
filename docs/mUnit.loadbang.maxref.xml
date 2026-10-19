@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="mUnit.loadbang" module="max" category="mUnit">
+
+	<digest>
+		Bang once the mUnit handler is ready, so test inputs are not sent too early
+	</digest>
+
+	<description>
+		<o>mUnit.loadbang</o> bangs once, when <o>mUnit.handler</o> has started and been configured. A plain <o>loadbang</o> is too early: the <o>node.script</o> and <o>v8</o> objects behind the framework are still starting, so an assert fed by it would miss its input. It works whether its patch loads before or after that moment, which makes it the right starting point in test patches opened by <o>mUnit.harness</o>. Each instance fires once, until it gets <m>reset</m>. The moment it fires is also when an assert's <at>timeout</at> starts counting and when <o>mUnit.stimulus~</o> and <o>mUnit.assert~</o> with <at>trigger</at> auto start.
+	</description>
+
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Tom Whiston</metadata>
+		<metadata name="tag">mUnit</metadata>
+		<metadata name="tag">testing</metadata>
+		<metadata name="tag">unit test</metadata>
+		<metadata name="tag">loadbang</metadata>
+	</metadatalist>
+
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="INLET_TYPE">
+			<digest>bang fires it now; reset re-arms it</digest>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="bang">
+			<digest>Bang once, when the handler is ready</digest>
+		</outlet>
+	</outletlist>
+
+	<!--ARGUMENTS-->
+	<objarglist>
+	</objarglist>
+
+	<!--MESSAGES-->
+	<methodlist>
+		<method name="bang">
+			<arglist />
+			<digest>Fire now</digest>
+			<description>Sends a bang whether or not the handler is ready, for driving a test by hand.</description>
+		</method>
+		<method name="reset">
+			<arglist />
+			<digest>Re-arm</digest>
+			<description>The object fires again at the next ready moment, or at once if the handler is already ready.</description>
+		</method>
+	</methodlist>
+
+	<!--ATTRIBUTES-->
+	<attributelist>
+	</attributelist>
+
+	<!--OUTPUT-->
+	<misc name="Output">
+		<entry name="bang">
+			<description>Out the outlet: a bang, once, when the handler is ready, whether the patch opened before or after that moment.</description>
+		</entry>
+	</misc>
+
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="mUnit.teardown" />
+		<seealso name="mUnit.handler" />
+		<seealso name="mUnit.assert" />
+		<seealso name="loadbang" />
+	</seealsolist>
+
+</c74object>

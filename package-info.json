@@ -1,0 +1,25 @@
+{
+	"author" : "Tom Whiston",
+	"description" : "Unit testing for Max: assertions inside your patches, with JSON and JUnit results for CI",
+	"homepatcher" : "",
+	"max_version_min" : "9.0",
+	"max_version_max" : "none",
+	"name" : "mUnit",
+	"os" : {
+		"macintosh" : {
+			"platform" : [ "x64", "arm64" ],
+			"min_version" : "none"
+		},
+		"windows" : {
+			"platform" : [ "x64" ],
+			"min_version" : "none"
+		}
+	},
+	"package_extra" : {
+		"reverse_domain" : "io.github.twhiston",
+		"copyright" : "Copyright (c) 2024-2026 Tom Whiston"
+	},
+	"tags" : [ "testing", "unit test", "assert", "ci", "junit" ],
+	"version" : "1.0.0-rc.1",
+	"website" : "https://github.com/twhiston/mUnit"
+}

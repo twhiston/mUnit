@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="mUnit.assert~" module="msp" category="mUnit">
+
+	<digest>
+		Capture a signal and check it with an expression or against a reference file
+	</digest>
+
+	<description>
+		<o>mUnit.assert~</o> is an assert for signals. It records <at>duration</at> ms of its signal inlets into its own <o>buffer~</o>, starting when the suite starts (<at>trigger</at> auto) or on a <m>bang</m> to the left inlet (<at>trigger</at> manual), at the next signal vector. It then hands each channel to the assert engine as <m>in1</m> and <m>in2</m>, so everything <o>mUnit.assert</o> does applies to the samples: the expression (default <m>rms(in1) &gt; 0</m>), the helpers (<m>rms</m>, <m>peak</m>, <m>dc</m>, <m>maxDiff</m>, <m>snr</m>, <m>approx</m>, and <m>freq</m>, the frequency in Hz from the zero crossings) and custom scripts, which receive the channels as arrays. With <at>reference</at> the capture is compared with a wav file next to the test patch instead. The outlet bangs once the capture has been evaluated. Signal tests need DSP running: the <m>dsp</m> key of the configuration applies a driver, sample rate and vector size for the suite (the NonRealTime driver needs no hardware and makes the suite the same on every machine) and restores them afterwards. Give the object a <at>timeout</at>, so a suite with DSP off still ends. Pair it with <o>mUnit.stimulus~</o> for a repeatable input.
+	</description>
+
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Tom Whiston</metadata>
+		<metadata name="tag">mUnit</metadata>
+		<metadata name="tag">testing</metadata>
+		<metadata name="tag">unit test</metadata>
+		<metadata name="tag">assert</metadata>
+		<metadata name="tag">MSP</metadata>
+	</metadatalist>
+
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="bang">
+			<digest>Control: bang starts the capture</digest>
+			<description>With <at>trigger</at> manual, a <m>bang</m> starts the capture at the next signal vector. Not for test data.</description>
+		</inlet>
+		<inlet id="1" type="signal">
+			<digest>Signal 1, captured as in1</digest>
+		</inlet>
+		<inlet id="2" type="signal">
+			<digest>Signal 2, captured as in2 with @channels 2</digest>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="bang">
+			<digest>Bang once the capture has been evaluated</digest>
+		</outlet>
+	</outletlist>
+
+	<!--ARGUMENTS-->
+	<objarglist>
+		<objarg name="expression" optional="1" type="symbol">
+			<digest>The JavaScript expression over the captured channels, or a custom assert script</digest>
+			<description>
+				As for <o>mUnit.assert</o>, with <m>in1</m> and <m>in2</m> being lists of samples. The default is <m>rms(in1) &gt; 0</m>. Quote an expression that contains commas. Ignored when <at>reference</at> is set.
+			</description>
+		</objarg>
+	</objarglist>
+
+	<!--MESSAGES-->
+	<methodlist>
+		<method name="bang">
+			<arglist />
+			<digest>Start the capture</digest>
+			<description>In the left inlet: starts recording <at>duration</at> ms at the next signal vector. With <at>trigger</at> auto the suite start does this for you.</description>
+		</method>
+		<method name="signal">
+			<arglist />
+			<digest>The signals to capture</digest>
+			<description>In the signal inlets: the channels recorded into the object's own <o>buffer~</o> and handed to the expression as <m>in1</m> and <m>in2</m>.</description>
+		</method>
+	</methodlist>
+
+	<!--ATTRIBUTES-->
+	<attributelist>
+		<attribute name="duration" get="1" set="1" type="float" size="1">
+			<digest>How much to record, in ms (default 1000)</digest>
+			<description>Converted to samples at the suite's sample rate when the capture starts. The assert evaluates when the last sample is in.</description>
+		</attribute>
+		<attribute name="channels" get="1" set="1" type="int" size="1">
+			<digest>How many signal inlets to capture: 1 or 2 (default 1)</digest>
+			<description>With 2, the second signal inlet is captured as <m>in2</m>.</description>
+		</attribute>
+		<attribute name="trigger" get="1" set="1" type="symbol" size="1">
+			<digest>What starts the capture: auto or manual (default auto)</digest>
+			<description><m>auto</m>: when the suite starts, at the moment <o>mUnit.loadbang</o> fires. <m>manual</m>: on a <m>bang</m> to the left inlet.</description>
+			<attributelist>
+				<attribute name="enumvals" get="1" set="1" type="atom" size="2">
+					<enumlist>
+						<enum name="auto"><digest>When the suite starts</digest></enum>
+						<enum name="manual"><digest>On a bang to the left inlet</digest></enum>
+					</enumlist>
+				</attribute>
+				<attribute name="style" get="1" set="1" type="symbol" size="1" value="enum" />
+			</attributelist>
+		</attribute>
+		<attribute name="reference" get="1" set="1" type="symbol" size="1">
+			<digest>A wav file to compare the capture with</digest>
+			<description>The name of a file in <m>references/</m> next to the test patch (<m>.wav</m> is added if there is no extension). The capture passes when its signal-to-noise ratio against the reference is at least <at>snr</at> dB, aligned within <at>maxLatency</at> samples. A missing reference fails and says how to take it; when taking references (<m>munit run --take-references</m>, <m>takeReferences: true</m> in the configuration, or a <m>takeReferences 1</m> message to <o>mUnit.handler</o>) the capture is written as a 32-bit float wav. A failure reports the SNR, the largest difference and the latency, and keeps the capture as <m>actual.wav</m> in the run's <m>artifacts/</m> folder next to a link to the reference. References are compared at the suite's sample rate. When there is no such file in <m>references/</m>, a file of that name on Max's search path is read instead, e.g. <m>@reference jongly.aif</m> compares with the sound Max ships with (at 44.1 kHz); taking references still writes to <m>references/</m>.</description>
+		</attribute>
+		<attribute name="snr" get="1" set="1" type="float" size="1">
+			<digest>The least signal-to-noise ratio that counts as a match, in dB (default 60)</digest>
+			<description>60 dB is about 0.1% of the signal. Used with <at>reference</at>.</description>
+		</attribute>
+		<attribute name="maxLatency" get="1" set="1" type="int" size="1">
+			<digest>How many samples the capture may lead or lag the reference (default 0)</digest>
+			<description>The alignment is found by cross-correlation and reported as <m>latency</m> in the results. 0 compares the signals as they are.</description>
+		</attribute>
+		<attribute name="exact" get="1" set="1" type="int" size="1">
+			<digest>Demand identical samples (default 0)</digest>
+			<description>With 1, every sample must match the reference bit for bit, instead of meeting <at>snr</at>.</description>
+		</attribute>
+		<attribute name="timeout" get="1" set="1" type="float" size="1">
+			<digest>How long the assert may take, in ms (default none)</digest>
+			<description>As for <o>mUnit.assert</o>. Set one, so a suite with DSP off still ends: a capture that never finishes then fails instead of hanging the run until the suite timeout.</description>
+		</attribute>
+		<attribute name="name" get="1" set="1" type="symbol" size="1">
+			<digest>A name for the test (default: its UUID)</digest>
+			<description>Used in the console, the log and the results, as for <o>mUnit.assert</o>; <at>suite</at>, <at>maxCalls</at>, <at>skip</at>, <at>only</at>, <at>tolerance</at> and <at>dataInlets</at> apply too.</description>
+		</attribute>
+	</attributelist>
+
+	<!--MISC-->
+	<misc name="Signal helpers">
+		<entry name="freq(x)">
+			<description>The frequency of a captured channel in Hz, from its zero crossings, precise to a fraction of a Hz even for a short capture.</description>
+		</entry>
+		<entry name="rms(x), peak(x), dc(x), maxDiff(a, e), snr(a, reference)">
+			<description>Root mean square, largest absolute value, mean, largest difference, and signal-to-noise ratio in dB, over a channel's samples.</description>
+		</entry>
+	</misc>
+
+	<!--OUTPUT-->
+	<misc name="Output">
+		<entry name="bang">
+			<description>Out the outlet: a bang once the capture has been evaluated and the result reported to <o>mUnit.handler</o>, so a patch can chain the next capture or clean up.</description>
+		</entry>
+	</misc>
+
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="mUnit.stimulus~" />
+		<seealso name="mUnit.assert" />
+		<seealso name="mUnit.handler" />
+		<seealso name="mUnit.loadbang" />
+		<seealso name="buffer~" />
+		<seealso name="record~" />
+	</seealsolist>
+
+</c74object>

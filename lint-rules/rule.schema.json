@@ -1,0 +1,1016 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "mUnit lint rules",
+  "description": "A rule file for munit lint: one rule, a list of rules, or { \"rules\": [...] }. Each rule is a JSON object whose \"kind\" picks what is checked. The reference is lint-rules/README.md in the mUnit package.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/rule"
+    },
+    {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/rule"
+      },
+      "description": "A list of rules."
+    },
+    {
+      "type": "object",
+      "description": "A list of rules under \"rules\".",
+      "properties": {
+        "$schema": {
+          "type": "string",
+          "description": "The schema of this file, for editor completion: \"./rule.schema.json\" relative to this file."
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rule"
+          }
+        }
+      },
+      "required": [
+        "rules"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "$defs": {
+    "rule": {
+      "description": "One rule. \"kind\" picks what is checked; the rest parameterises it.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/forbid-object"
+        },
+        {
+          "$ref": "#/$defs/require-attribute"
+        },
+        {
+          "$ref": "#/$defs/attribute-value"
+        },
+        {
+          "$ref": "#/$defs/max-instances"
+        },
+        {
+          "$ref": "#/$defs/fanout-without-trigger"
+        },
+        {
+          "$ref": "#/$defs/overlapping-boxes"
+        },
+        {
+          "$ref": "#/$defs/naming"
+        },
+        {
+          "$ref": "#/$defs/script"
+        }
+      ]
+    },
+    "level": {
+      "description": "What a finding does: \"warn\" is reported, \"block\" is reported and makes `munit lint` exit 1 (fails CI), \"off\" turns the rule off. Default \"warn\".",
+      "enum": [
+        "off",
+        "warn",
+        "block"
+      ]
+    },
+    "match": {
+      "description": "Which boxes the rule looks at. Every field given must match.",
+      "type": "object",
+      "properties": {
+        "object": {
+          "description": "Object name(s). Names are normalised like the box's: \"t\", \"trigger\", \"zl reg\" and \"zl.reg\" all work, and UI objects match by their class (\"toggle\"). Several names match any of them.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "maxclass": {
+          "description": "Max class(es) of the box: \"newobj\", \"message\", \"comment\", \"toggle\", ...",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "args": {
+          "description": "Positional argument patterns, matched from the first argument; \"*\" matches any one argument. The box may have more arguments than patterns.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "text": {
+          "type": "string",
+          "description": "A regular expression over the whole box text, e.g. \"^print$\" for a [print] with no name."
+        }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    },
+    "scope": {
+      "description": "Which patchers in a file the rule looks at, by namespace. Default [\"box\"].",
+      "type": "object",
+      "properties": {
+        "namespace": {
+          "description": "\"box\" (an ordinary patcher), \"dsp.gen\" ([gen~] and .gendsp), \"jit.gen\" ([jit.gen], [jit.pix], [jit.gl.pix]), \"rnbo\" ([rnbo~] and .rnbopat), or \"*\" for all of them.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            }
+          ]
+        }
+      },
+      "required": [
+        "namespace"
+      ],
+      "additionalProperties": false
+    },
+    "forbid-object": {
+      "type": "object",
+      "title": "forbid-object",
+      "description": "A matching box is not allowed.",
+      "properties": {
+        "$schema": {
+          "type": "string",
+          "description": "The schema of this file, for editor completion: \"./rule.schema.json\" relative to this file."
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The rule's id, unique within a config: findings name it, and overrides and \"munit-lint disable\" comments refer to it."
+        },
+        "level": {
+          "description": "What a finding does: \"warn\" is reported, \"block\" is reported and makes `munit lint` exit 1 (fails CI), \"off\" turns the rule off. Default \"warn\".",
+          "enum": [
+            "off",
+            "warn",
+            "block"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "description": "The message of each finding, replacing the kind's default. Say what to do instead."
+        },
+        "scope": {
+          "description": "Which patchers in a file the rule looks at, by namespace. Default [\"box\"].",
+          "type": "object",
+          "properties": {
+            "namespace": {
+              "description": "\"box\" (an ordinary patcher), \"dsp.gen\" ([gen~] and .gendsp), \"jit.gen\" ([jit.gen], [jit.pix], [jit.gl.pix]), \"rnbo\" ([rnbo~] and .rnbopat), or \"*\" for all of them.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1
+                }
+              ]
+            }
+          },
+          "required": [
+            "namespace"
+          ],
+          "additionalProperties": false
+        },
+        "kind": {
+          "const": "forbid-object",
+          "description": "A matching box is not allowed."
+        },
+        "match": {
+          "description": "Which boxes the rule looks at. Every field given must match.",
+          "type": "object",
+          "properties": {
+            "object": {
+              "description": "Object name(s). Names are normalised like the box's: \"t\", \"trigger\", \"zl reg\" and \"zl.reg\" all work, and UI objects match by their class (\"toggle\"). Several names match any of them.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "maxclass": {
+              "description": "Max class(es) of the box: \"newobj\", \"message\", \"comment\", \"toggle\", ...",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "args": {
+              "description": "Positional argument patterns, matched from the first argument; \"*\" matches any one argument. The box may have more arguments than patterns.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "text": {
+              "type": "string",
+              "description": "A regular expression over the whole box text, e.g. \"^print$\" for a [print] with no name."
+            }
+          },
+          "minProperties": 1,
+          "additionalProperties": false
+        },
+        "fix": {
+          "description": "How --fix rewrites the box: replace the object, keeping, dropping or remapping its arguments; @attributes in the text are kept.",
+          "type": "object",
+          "properties": {
+            "replace": {
+              "type": "object",
+              "properties": {
+                "object": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "The object to put in its place, e.g. \"list.reg\"."
+                },
+                "args": {
+                  "description": "\"keep\" (the default): the original arguments; \"drop\": none; a list: tokens written as given, where \"$1\", \"$2\", ... pick the original arguments by position.",
+                  "oneOf": [
+                    {
+                      "enum": [
+                        "keep",
+                        "drop"
+                      ]
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "object"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "replace"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "match"
+      ],
+      "additionalProperties": false
+    },
+    "require-attribute": {
+      "type": "object",
+      "title": "require-attribute",
+      "description": "A matching box must have the attribute, inline in its text (\"@autowatch 0\") or saved on the box.",
+      "properties": {
+        "$schema": {
+          "type": "string",
+          "description": "The schema of this file, for editor completion: \"./rule.schema.json\" relative to this file."
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The rule's id, unique within a config: findings name it, and overrides and \"munit-lint disable\" comments refer to it."
+        },
+        "level": {
+          "description": "What a finding does: \"warn\" is reported, \"block\" is reported and makes `munit lint` exit 1 (fails CI), \"off\" turns the rule off. Default \"warn\".",
+          "enum": [
+            "off",
+            "warn",
+            "block"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "description": "The message of each finding, replacing the kind's default. Say what to do instead."
+        },
+        "scope": {
+          "description": "Which patchers in a file the rule looks at, by namespace. Default [\"box\"].",
+          "type": "object",
+          "properties": {
+            "namespace": {
+              "description": "\"box\" (an ordinary patcher), \"dsp.gen\" ([gen~] and .gendsp), \"jit.gen\" ([jit.gen], [jit.pix], [jit.gl.pix]), \"rnbo\" ([rnbo~] and .rnbopat), or \"*\" for all of them.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1
+                }
+              ]
+            }
+          },
+          "required": [
+            "namespace"
+          ],
+          "additionalProperties": false
+        },
+        "kind": {
+          "const": "require-attribute",
+          "description": "A matching box must have the attribute, inline in its text (\"@autowatch 0\") or saved on the box."
+        },
+        "match": {
+          "description": "Which boxes the rule looks at. Every field given must match.",
+          "type": "object",
+          "properties": {
+            "object": {
+              "description": "Object name(s). Names are normalised like the box's: \"t\", \"trigger\", \"zl reg\" and \"zl.reg\" all work, and UI objects match by their class (\"toggle\"). Several names match any of them.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "maxclass": {
+              "description": "Max class(es) of the box: \"newobj\", \"message\", \"comment\", \"toggle\", ...",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "args": {
+              "description": "Positional argument patterns, matched from the first argument; \"*\" matches any one argument. The box may have more arguments than patterns.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "text": {
+              "type": "string",
+              "description": "A regular expression over the whole box text, e.g. \"^print$\" for a [print] with no name."
+            }
+          },
+          "minProperties": 1,
+          "additionalProperties": false
+        },
+        "attribute": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The attribute name, without the @."
+        },
+        "fix": {
+          "description": "How --fix adds the attribute: \"set\" is the value to write, inline for object boxes and as a box key for UI objects.",
+          "type": "object",
+          "properties": {
+            "set": {
+              "description": "The value: a number, a string, or a list of them."
+            }
+          },
+          "required": [
+            "set"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "match",
+        "attribute"
+      ],
+      "additionalProperties": false
+    },
+    "attribute-value": {
+      "type": "object",
+      "title": "attribute-value",
+      "description": "A matching box must have the attribute set to the value. Values compare as lists of tokens, so 0, \"0\" and false are the same.",
+      "properties": {
+        "$schema": {
+          "type": "string",
+          "description": "The schema of this file, for editor completion: \"./rule.schema.json\" relative to this file."
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The rule's id, unique within a config: findings name it, and overrides and \"munit-lint disable\" comments refer to it."
+        },
+        "level": {
+          "description": "What a finding does: \"warn\" is reported, \"block\" is reported and makes `munit lint` exit 1 (fails CI), \"off\" turns the rule off. Default \"warn\".",
+          "enum": [
+            "off",
+            "warn",
+            "block"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "description": "The message of each finding, replacing the kind's default. Say what to do instead."
+        },
+        "scope": {
+          "description": "Which patchers in a file the rule looks at, by namespace. Default [\"box\"].",
+          "type": "object",
+          "properties": {
+            "namespace": {
+              "description": "\"box\" (an ordinary patcher), \"dsp.gen\" ([gen~] and .gendsp), \"jit.gen\" ([jit.gen], [jit.pix], [jit.gl.pix]), \"rnbo\" ([rnbo~] and .rnbopat), or \"*\" for all of them.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1
+                }
+              ]
+            }
+          },
+          "required": [
+            "namespace"
+          ],
+          "additionalProperties": false
+        },
+        "kind": {
+          "const": "attribute-value",
+          "description": "A matching box must have the attribute set to the value. Values compare as lists of tokens, so 0, \"0\" and false are the same."
+        },
+        "match": {
+          "description": "Which boxes the rule looks at. Every field given must match.",
+          "type": "object",
+          "properties": {
+            "object": {
+              "description": "Object name(s). Names are normalised like the box's: \"t\", \"trigger\", \"zl reg\" and \"zl.reg\" all work, and UI objects match by their class (\"toggle\"). Several names match any of them.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "maxclass": {
+              "description": "Max class(es) of the box: \"newobj\", \"message\", \"comment\", \"toggle\", ...",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "args": {
+              "description": "Positional argument patterns, matched from the first argument; \"*\" matches any one argument. The box may have more arguments than patterns.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "text": {
+              "type": "string",
+              "description": "A regular expression over the whole box text, e.g. \"^print$\" for a [print] with no name."
+            }
+          },
+          "minProperties": 1,
+          "additionalProperties": false
+        },
+        "attribute": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The attribute name, without the @."
+        },
+        "value": {
+          "description": "The value the attribute must have: a number, a string, a boolean, or a list of them."
+        },
+        "fix": {
+          "type": "boolean",
+          "description": "true: --fix sets the attribute to the value. Default false."
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "match",
+        "attribute",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "max-instances": {
+      "type": "object",
+      "title": "max-instances",
+      "description": "At most \"max\" matching boxes per file or per patcher; every box beyond that is reported.",
+      "properties": {
+        "$schema": {
+          "type": "string",
+          "description": "The schema of this file, for editor completion: \"./rule.schema.json\" relative to this file."
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The rule's id, unique within a config: findings name it, and overrides and \"munit-lint disable\" comments refer to it."
+        },
+        "level": {
+          "description": "What a finding does: \"warn\" is reported, \"block\" is reported and makes `munit lint` exit 1 (fails CI), \"off\" turns the rule off. Default \"warn\".",
+          "enum": [
+            "off",
+            "warn",
+            "block"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "description": "The message of each finding, replacing the kind's default. Say what to do instead."
+        },
+        "scope": {
+          "description": "Which patchers in a file the rule looks at, by namespace. Default [\"box\"].",
+          "type": "object",
+          "properties": {
+            "namespace": {
+              "description": "\"box\" (an ordinary patcher), \"dsp.gen\" ([gen~] and .gendsp), \"jit.gen\" ([jit.gen], [jit.pix], [jit.gl.pix]), \"rnbo\" ([rnbo~] and .rnbopat), or \"*\" for all of them.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1
+                }
+              ]
+            }
+          },
+          "required": [
+            "namespace"
+          ],
+          "additionalProperties": false
+        },
+        "kind": {
+          "const": "max-instances",
+          "description": "At most \"max\" matching boxes per file or per patcher; every box beyond that is reported."
+        },
+        "match": {
+          "description": "Which boxes the rule looks at. Every field given must match.",
+          "type": "object",
+          "properties": {
+            "object": {
+              "description": "Object name(s). Names are normalised like the box's: \"t\", \"trigger\", \"zl reg\" and \"zl.reg\" all work, and UI objects match by their class (\"toggle\"). Several names match any of them.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "maxclass": {
+              "description": "Max class(es) of the box: \"newobj\", \"message\", \"comment\", \"toggle\", ...",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "args": {
+              "description": "Positional argument patterns, matched from the first argument; \"*\" matches any one argument. The box may have more arguments than patterns.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "text": {
+              "type": "string",
+              "description": "A regular expression over the whole box text, e.g. \"^print$\" for a [print] with no name."
+            }
+          },
+          "minProperties": 1,
+          "additionalProperties": false
+        },
+        "max": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "How many matching boxes are allowed. 0 forbids them, like forbid-object without a fix."
+        },
+        "per": {
+          "enum": [
+            "file",
+            "patcher"
+          ],
+          "description": "\"file\" (the default) counts across the whole file, nested patchers included; \"patcher\" counts each patcher on its own."
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "match",
+        "max"
+      ],
+      "additionalProperties": false
+    },
+    "fanout-without-trigger": {
+      "type": "object",
+      "title": "fanout-without-trigger",
+      "description": "One message outlet connected to several inlets, so the order of the messages depends on the layout. Signal outlets are exempt. Put a [trigger] between them.",
+      "properties": {
+        "$schema": {
+          "type": "string",
+          "description": "The schema of this file, for editor completion: \"./rule.schema.json\" relative to this file."
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The rule's id, unique within a config: findings name it, and overrides and \"munit-lint disable\" comments refer to it."
+        },
+        "level": {
+          "description": "What a finding does: \"warn\" is reported, \"block\" is reported and makes `munit lint` exit 1 (fails CI), \"off\" turns the rule off. Default \"warn\".",
+          "enum": [
+            "off",
+            "warn",
+            "block"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "description": "The message of each finding, replacing the kind's default. Say what to do instead."
+        },
+        "scope": {
+          "description": "Which patchers in a file the rule looks at, by namespace. Default [\"box\"].",
+          "type": "object",
+          "properties": {
+            "namespace": {
+              "description": "\"box\" (an ordinary patcher), \"dsp.gen\" ([gen~] and .gendsp), \"jit.gen\" ([jit.gen], [jit.pix], [jit.gl.pix]), \"rnbo\" ([rnbo~] and .rnbopat), or \"*\" for all of them.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1
+                }
+              ]
+            }
+          },
+          "required": [
+            "namespace"
+          ],
+          "additionalProperties": false
+        },
+        "kind": {
+          "const": "fanout-without-trigger",
+          "description": "One message outlet connected to several inlets, so the order of the messages depends on the layout. Signal outlets are exempt. Put a [trigger] between them."
+        },
+        "allow": {
+          "description": "Source objects whose fan-out is fine, by object name, e.g. [\"loadbang\"].",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "overlapping-boxes": {
+      "type": "object",
+      "title": "overlapping-boxes",
+      "description": "Two boxes in a patcher overlap in patching view, so one hides the other. The box drawn on top (later in the file) is reported. Boxes sent to the background (@background 1) are exempt.",
+      "properties": {
+        "$schema": {
+          "type": "string",
+          "description": "The schema of this file, for editor completion: \"./rule.schema.json\" relative to this file."
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The rule's id, unique within a config: findings name it, and overrides and \"munit-lint disable\" comments refer to it."
+        },
+        "level": {
+          "description": "What a finding does: \"warn\" is reported, \"block\" is reported and makes `munit lint` exit 1 (fails CI), \"off\" turns the rule off. Default \"warn\".",
+          "enum": [
+            "off",
+            "warn",
+            "block"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "description": "The message of each finding, replacing the kind's default. Say what to do instead."
+        },
+        "scope": {
+          "description": "Which patchers in a file the rule looks at, by namespace. Default [\"box\"].",
+          "type": "object",
+          "properties": {
+            "namespace": {
+              "description": "\"box\" (an ordinary patcher), \"dsp.gen\" ([gen~] and .gendsp), \"jit.gen\" ([jit.gen], [jit.pix], [jit.gl.pix]), \"rnbo\" ([rnbo~] and .rnbopat), or \"*\" for all of them.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1
+                }
+              ]
+            }
+          },
+          "required": [
+            "namespace"
+          ],
+          "additionalProperties": false
+        },
+        "kind": {
+          "const": "overlapping-boxes",
+          "description": "Two boxes in a patcher overlap in patching view, so one hides the other. The box drawn on top (later in the file) is reported. Boxes sent to the background (@background 1) are exempt."
+        },
+        "allow": {
+          "description": "Objects that may overlap other boxes, by object name or class, e.g. [\"panel\"].",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "tolerance": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Pixels two boxes may overlap by, horizontally and vertically, before it counts. Default 0."
+        }
+      },
+      "required": [
+        "id",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "naming": {
+      "type": "object",
+      "title": "naming",
+      "description": "A scripting name, or the name of a send or receive, must match a regular expression.",
+      "properties": {
+        "$schema": {
+          "type": "string",
+          "description": "The schema of this file, for editor completion: \"./rule.schema.json\" relative to this file."
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The rule's id, unique within a config: findings name it, and overrides and \"munit-lint disable\" comments refer to it."
+        },
+        "level": {
+          "description": "What a finding does: \"warn\" is reported, \"block\" is reported and makes `munit lint` exit 1 (fails CI), \"off\" turns the rule off. Default \"warn\".",
+          "enum": [
+            "off",
+            "warn",
+            "block"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "description": "The message of each finding, replacing the kind's default. Say what to do instead."
+        },
+        "scope": {
+          "description": "Which patchers in a file the rule looks at, by namespace. Default [\"box\"].",
+          "type": "object",
+          "properties": {
+            "namespace": {
+              "description": "\"box\" (an ordinary patcher), \"dsp.gen\" ([gen~] and .gendsp), \"jit.gen\" ([jit.gen], [jit.pix], [jit.gl.pix]), \"rnbo\" ([rnbo~] and .rnbopat), or \"*\" for all of them.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1
+                }
+              ]
+            }
+          },
+          "required": [
+            "namespace"
+          ],
+          "additionalProperties": false
+        },
+        "kind": {
+          "const": "naming",
+          "description": "A scripting name, or the name of a send or receive, must match a regular expression."
+        },
+        "target": {
+          "enum": [
+            "varname",
+            "send",
+            "receive",
+            "send-receive"
+          ],
+          "description": "\"varname\": the scripting name of any box; \"send\": [send], [send~], [mc.send~], [forward]; \"receive\": [receive], [receive~], [mc.receive~]; \"send-receive\": both. [value], [pv] and [pvar] count as both."
+        },
+        "pattern": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A regular expression the name must match, e.g. \"^[a-z][a-z0-9_]*$\"."
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "target",
+        "pattern"
+      ],
+      "additionalProperties": false
+    },
+    "script": {
+      "type": "object",
+      "title": "script",
+      "description": "A JavaScript module decides what to report: it exports check(ctx) and is called with the document and the patchers in scope. A CommonJS module, loaded by munit lint and by [mUnit.lint] in Max alike. See api/munit-lint for what ctx offers.",
+      "properties": {
+        "$schema": {
+          "type": "string",
+          "description": "The schema of this file, for editor completion: \"./rule.schema.json\" relative to this file."
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The rule's id, unique within a config: findings name it, and overrides and \"munit-lint disable\" comments refer to it."
+        },
+        "level": {
+          "description": "What a finding does: \"warn\" is reported, \"block\" is reported and makes `munit lint` exit 1 (fails CI), \"off\" turns the rule off. Default \"warn\".",
+          "enum": [
+            "off",
+            "warn",
+            "block"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "description": "The message of each finding, replacing the kind's default. Say what to do instead."
+        },
+        "scope": {
+          "description": "Which patchers in a file the rule looks at, by namespace. Default [\"box\"].",
+          "type": "object",
+          "properties": {
+            "namespace": {
+              "description": "\"box\" (an ordinary patcher), \"dsp.gen\" ([gen~] and .gendsp), \"jit.gen\" ([jit.gen], [jit.pix], [jit.gl.pix]), \"rnbo\" ([rnbo~] and .rnbopat), or \"*\" for all of them.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1
+                }
+              ]
+            }
+          },
+          "required": [
+            "namespace"
+          ],
+          "additionalProperties": false
+        },
+        "kind": {
+          "const": "script",
+          "description": "A JavaScript module decides what to report: it exports check(ctx) and is called with the document and the patchers in scope. A CommonJS module, loaded by munit lint and by [mUnit.lint] in Max alike. See api/munit-lint for what ctx offers."
+        },
+        "module": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The module file, as a path relative to this rule file, e.g. \"./named-subpatchers.js\"."
+        },
+        "options": {
+          "description": "Anything the module wants, passed through as ctx.options."
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "module"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

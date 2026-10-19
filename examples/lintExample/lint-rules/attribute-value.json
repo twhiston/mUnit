@@ -1,0 +1,11 @@
+{
+  "$schema": "../../../../lint-rules/rule.schema.json",
+  "id": "coll-embed",
+  "kind": "attribute-value",
+  "level": "warn",
+  "match": { "object": "coll" },
+  "attribute": "embed",
+  "value": 1,
+  "message": "a [coll] in this project keeps its data in the patch: set @embed 1",
+  "fix": true
+}
