@@ -115,25 +115,9 @@
 									"patching_rect": [
 										10,
 										10,
-										620,
-										125
+										790,
+										140
 									]
-								}
-							},
-							{
-								"box": {
-									"id": "obj-2",
-									"maxclass": "comment",
-									"numinlets": 1,
-									"numoutlets": 0,
-									"patching_rect": [
-										20,
-										150,
-										780,
-										63
-									],
-									"text": "[mUnit.harness] points mUnit.handler at your munit.config.js and, with @loadFolder, opens a folder of test patches, so one patch runs a whole suite. Connect its outlet to the handler's inlet. It runs when its patch opens; the patch must be saved, since its folder is where the config and the tests are found. Without @loadFolder it only loads the config, as here.",
-									"linecount": 4
 								}
 							},
 							{
@@ -144,7 +128,7 @@
 									"numoutlets": 1,
 									"patching_rect": [
 										20,
-										228,
+										170,
 										92,
 										22
 									],
@@ -162,7 +146,7 @@
 									"numoutlets": 2,
 									"patching_rect": [
 										20,
-										268,
+										210,
 										92,
 										22
 									],
@@ -181,7 +165,7 @@
 									"numoutlets": 0,
 									"patching_rect": [
 										20,
-										298,
+										240,
 										300,
 										49
 									],
@@ -197,7 +181,7 @@
 									"numoutlets": 1,
 									"patching_rect": [
 										350,
-										228,
+										170,
 										99,
 										22
 									],
@@ -218,7 +202,7 @@
 									],
 									"patching_rect": [
 										350,
-										263,
+										205,
 										30,
 										22
 									],
@@ -233,7 +217,7 @@
 									"numoutlets": 0,
 									"patching_rect": [
 										350,
-										298,
+										240,
 										199,
 										22
 									],
@@ -248,7 +232,7 @@
 									"numoutlets": 0,
 									"patching_rect": [
 										20,
-										367,
+										309,
 										780,
 										91
 									],

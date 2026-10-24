@@ -8,8 +8,12 @@
 	</digest>
 
 	<description>
-		<o>mUnit.assert</o> is the test object of mUnit. It receives inputs on its data inlets and evaluates a JavaScript expression over them: the expression refers to the inputs as <m>in1</m> to <m>in10</m>, and passes when it returns exactly <m>true</m>. The verdict is reported to <o>mUnit.handler</o>, which writes the results of the whole suite, and the box turns green (passed), red (failed) or yellow (skipped). Ints, floats, symbols, lists, dicts and Jitter matrices are all passed to the expression as values, so <m>in1 === 'foo'</m>, <m>in1.length === 3</m>, <m>in1.name === 'munit'</m> and <m>in1.dim[0] == 64</m> all work. Helpers such as <m>approx</m>, <m>equals</m>, <m>snapshot</m>, <m>rms</m> and <m>planeMean</m> report expected and actual values when they fail. Instead of an expression, the name of a JavaScript file makes a custom assert. The object keeps as many data inlets as the highest <m>inN</m> the expression uses, up to 10; the first inlet is reserved for the framework. Feed the inputs from <o>mUnit.loadbang</o>, not <o>loadbang</o>, so they are not sent before the handler is ready. <o>assert</o> is an alias kept for old patches.
+		<o>mUnit.assert</o> is the test object of mUnit. It receives inputs on its data inlets and evaluates a JavaScript expression over them: the expression refers to the inputs as <m>in1</m> to <m>in10</m>, and passes when it returns exactly <m>true</m>. The verdict is reported to <o>mUnit.handler</o>, which writes the results of the whole suite, and the box turns green (passed), red (failed) or yellow (skipped).
 	</description>
+
+	<discussion>
+		Ints, floats, symbols, lists, dicts and Jitter matrices are all passed to the expression as values, so <m>in1 === 'foo'</m>, <m>in1.length === 3</m>, <m>in1.name === 'munit'</m> and <m>in1.dim[0] == 64</m> all work. Helpers such as <m>approx</m>, <m>equals</m>, <m>snapshot</m>, <m>rms</m> and <m>planeMean</m> report expected and actual values when they fail. Instead of an expression, the name of a JavaScript file makes a custom assert. The object keeps as many data inlets as the highest <m>inN</m> the expression uses, up to 10; the first inlet is reserved for the framework. <m>in1</m> is hot: a value there evaluates the expression with the latest other inputs, and a bang there evaluates again. Feed the inputs from <o>mUnit.loadbang</o>, not <o>loadbang</o>, so they are not sent before the handler is ready. Each assert is posted to the Max console as it finishes and written to the results. <o>assert</o> is an alias kept for old patches.
+	</discussion>
 
 	<!--METADATA-->
 	<metadatalist>

@@ -20,6 +20,6 @@
 		"copyright" : "Copyright (c) 2024-2026 Tom Whiston"
 	},
 	"tags" : [ "testing", "unit test", "assert", "ci", "junit" ],
-	"version" : "1.0.0-rc.3",
+	"version" : "1.0.0-rc.4",
 	"website" : "https://github.com/twhiston/mUnit"
 }

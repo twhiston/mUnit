@@ -39,6 +39,9 @@ fail code, and lints patcher files against rules you write, with or without Max.
 
 - **mUnit Overview** - help patchers, example patchers and this
 - **mUnit Lint Server** - lints whatever you save while it is open.
+- **mUnit Glossary** - the words of testing, explained, each with its help
+  patcher, example and manual section a click away.
+- **mUnit API** - the JavaScript API reference as a web page inside Max.
 
 ### CLI
 
@@ -49,9 +52,10 @@ linting your patchers.
 ### Documentation
 
 - Help patchers and reference files for each object (really an abstraction!)
-- This README
-- `api/` folder with Typescript types and markdown documentation of all user
-  facing functionality in the code
+- This README, with a [glossary](#glossary) of testing terms at the end
+- `api/` folder with the TypeScript typings and the reference of all user
+  facing functionality in the code, as markdown (`api/markdown`) and as a web
+  site (`api/html`), which **Extras > mUnit > mUnit API** opens inside Max
 
 ## Installing
 
@@ -129,7 +133,7 @@ everything else.
 The package's `examples` folder has a patch for each feature; **Extras > mUnit
 Overview** opens any of them. Each folder is also a runnable suite:
 `munit run <folder>/<patch>`. Many examples write results, references or failure
-files next to themselves: the **open folder** button in each one shows its
+files next to themselves: the **Open folder** button in each one shows its
 folder in Finder or Explorer.
 
 - `simpleConfigExample`: the assert attributes (@maxCalls, @timeout,
@@ -492,8 +496,8 @@ dsp: { driver: "NonRealTime", sr: 48000, vs: 64 }
 `NonRealTime` renders as fast as the machine can, needs no audio hardware and
 makes the suite the same on every run, which is what CI wants. `sr` and `vs` are
 the sample rate and signal vector size. Each is optional. The handler switches
-DSP off, applies them, switches DSP on and, since Max keeps the driver in its
-preferences, restores everything after the teardowns. `settleMs` (default 1500)
+DSP off, applies them one step at a time, switches DSP on and, since Max keeps
+the driver in its preferences, restores everything after the teardowns. `settleMs` (default 1500)
 is how long a driver change gets to take effect.
 
 The tests start only once `[dspstate~]` has reported DSP running on the driver,
@@ -714,10 +718,13 @@ node.js level and are not arguments to the Max console object.
 
 Everything a custom assert, a formatter or a `munit.config.js` can rely on is
 the `libmunit` API: `require("libmunit")` in Max, and `import("libmunit")` in a
-JSDoc annotation. The package documents it in two forms, generated from the same
+JSDoc annotation. The package documents it in three forms, generated from the same
 source:
 
-- `api/libmunit/README.md`: the reference, one page per type and function.
+- **Extras > mUnit > mUnit API**: the reference as a web site inside Max,
+  with search (`api/html/index.html` in the package).
+- `api/markdown/libmunit/README.md`: the same reference as markdown, one page
+  per type and function.
 - `api/libmunit.d.ts`: the typings. Include the file from a `jsconfig.json` next
   to your scripts and VS Code completes `helpers.`, shows the documentation on
   hover and underlines a misspelt config key. Every example under `examples` has
@@ -750,7 +757,8 @@ hover, but its keys aren't checked.
 
 The reference lists exactly what is supported; anything else
 `require("libmunit")` returns is internal and may change. The patcher linter's
-API for script rules is documented the same way under `api/munit-lint`.
+API for script rules is documented the same way, under `munit-lint` in the
+web site and in `api/markdown/munit-lint`.
 
 ## mUnit.Harness
 
@@ -1082,7 +1090,8 @@ in `rules` (`"munit-rules-acme"`), and tested with
 `require("munit-cli/test").lintFiles`. All of this is in `lint-rules/README.md`.
 The module is CommonJS, loaded with `require` by `munit lint` and by
 `[mUnit.lint]` in Max alike (its server is a `node.script`), so it may `require`
-what it likes. The API is documented under `api/munit-lint`, and
+what it likes. The API is documented under `munit-lint` in **Extras > mUnit >
+mUnit API** and in `api/markdown/munit-lint`, and
 `api/munit-lint.d.ts` in a `jsconfig.json` that includes the module (as the
 example's does) gives completion on `ctx`. Test a rule with
 `munit lint <patch> --rules my-rule.json --format json`, which prints every
@@ -1127,26 +1136,44 @@ turns that off).
   (and the patch in front, when it lies outside and `@followfront` is 1),
   `lint <path>` one file, `fix` and `fix <path>` apply the fixes the same way
   and write the files back, `status` posts what the front-patcher helper has
-  seen.
+  seen. `autofix 1` makes every lint fix as well (`@autofix`); Max reloads the
+  fixed patch, and to let it notice, a save is then linted about two seconds
+  later rather than at once.
+  `output <path>` (`@output`) writes every lint's report to a file as well as
+  the console, the whole folder after a start or `lint`, one patch after a
+  save, in the format `format` (`@format`) says: `auto` (the default) picks
+  JSON for `.json`, JUnit for `.xml` and text otherwise; `output none` stops.
 - Outlets: the left one sends the findings of every lint as a dict, for your own
-  UI: `files`, `summary`, `errors` and `findings`, each with `rule`, `level`,
-  `file`, `patchers` (the subpatchers on the way to the box, empty at the top
-  level), `location`, `box`, `position` and `message`. The right one passes the
-  server's messages through (`started`).
+  UI: `files`, `summary`, `errors`, `text` (the one-line summary as posted to
+  the console) and `findings`, each with `rule`, `level`, `file`, `patchers`
+  (the subpatchers on the way to the box, empty at the top level), `location`,
+  `box`, `position` and `message`. The right one passes the server's messages
+  through: `started` when the node script has booted, `state watching` when it
+  starts watching and `state stopped` when it stops, for a running light.
 
 The patch holding `[mUnit.lint]` must be saved, since `@folder` is relative to
 it. See `examples/lintExample`, or the `mUnit.lint` help patch.
 
 You don't need a patch of your own for this. **Extras > mUnit Lint Server** is
-one to leave open while you work: it starts in the automatic mode (`@folder
-none`), so every patch you save, anywhere on the disk, is linted with the config
-nearest to it, or with `mUnit:recommended` when there is none. *Choose a project
-folder* switches to project mode: the folder is watched and is the top of the
-config cascade (`@root 1`), so its `munit-lint.json` rules everything below it
-while subfolders add their own, and a patch outside the folder takes the
-folder's configs. A patch saved for the first time, or saved as a new file, is
-linted as soon as it comes to the front under its new name. `lint` lints the
-project folder again, or every patch seen in front.
+one to leave open while you work: a small window with a light that is green
+while the server is watching, red when it is stopped, and the result of the
+last lint under it. It starts in the automatic mode (`@folder none`), so every
+patch you save, anywhere on the disk, is linted with the config nearest to it,
+or with `mUnit:recommended` when there is none. The *Project folder* tab
+switches to project mode: the folder is watched and is the top of the config
+cascade (`@root 1`), so its `munit-lint.json` rules everything below it while
+subfolders add their own, and a patch outside the folder takes the folder's
+configs. A patch saved for the first time, or saved as a new file, is linted as
+soon as it comes to the front under its new name. Under *Findings*, the second
+tab also writes every lint's report to a file you choose (JSON, JUnit or text
+by its extension), for an editor or a dashboard to pick up. *Apply fixes* makes
+every lint fix what the rules can fix and write the files back; the fixed patch
+reloads in Max a couple of seconds after the save. *Fix now* does that once,
+switch or no switch. *Lint
+now* lints the project folder again, or every patch seen in front; *Max
+console* brings the console to the front, where the findings are. The patching
+view, behind the window (Edit > Edit Mode, then the presentation toggle),
+explains the wiring.
 
 ### Fixing
 
@@ -1161,6 +1188,439 @@ into the saved file, so the rest of it stays byte for byte as Max wrote it and a
 fix diffs as one line, whichever of Max's two layouts the file uses. A fix is
 applied, the file is linted again, and if that makes room for another fix it is
 applied too, up to five passes.
+
+## Glossary
+
+Testing has a vocabulary of its own, and much of it is new to Max. This section
+explains the words mUnit uses, with the help patcher, example or manual section
+where each one lives. The same glossary is in Max: **Extras > mUnit > mUnit
+Glossary**. Both come from `misc/mUnit-glossary.json` in the package.
+
+<!-- glossary:start -->
+### Testing basics
+
+- **test**: A patch, or part of one, that feeds known inputs into the thing you
+  are testing and checks what comes out. The check is an assert; a test passes
+  when its assert passes. Tests are kept so they can be run again after every
+  change, which is what makes them worth writing. Related: *assert*, *suite*,
+  *unit under test*. See [Quick start](#quick-start),
+  [simpleConfigExample](examples/simpleConfigExample).
+- **assert**: A statement that something must be true at this point, such as the
+  output equals 1. In mUnit an assert is an `[mUnit.assert]` box: it evaluates a
+  JavaScript expression over the values that arrive at its inlets and reports
+  pass, fail or skipped. Assertion means the same thing. Related: *expression*,
+  *verdict*, *test*. See the `[mUnit.assert]` help patcher, [Assert](#assert).
+- **unit under test**: The piece of your patch a test exercises: an abstraction,
+  a chain of objects, a gen~ patch, a shader. A test isolates it by feeding it
+  inputs directly, instead of through whatever it normally gets them from, so
+  the result depends only on the unit. Related: *test*, *stimulus*, *fixture*.
+  See [Tables of cases](#tables-of-cases).
+- **expression**: The JavaScript written in an `[mUnit.assert]` box. in1 to in10
+  stand for the inputs, so in2 > in1 or approx(in1, 0.5, 0.001) are expressions.
+  It passes when it returns exactly true; any other result, or an error, fails
+  that assertion. Related: *assert*, *inputs: in1 to in10*, *helper*. See
+  [Assert](#assert), [expectedActualExample](examples/expectedActualExample).
+- **expected versus actual**: The value you wanted (expected) and the value the
+  patch produced (actual). A good failure message reports both, for lists and
+  dicts it lists the differences between them, and captures those values as part
+  of the result report, so you can see what went wrong without adding prints.
+  Related: *assert*, *verdict*. See [Expected versus
+  actual](#expected-versus-actual),
+  [expectedActualExample](examples/expectedActualExample).
+- **verdict**: The outcome of an assert: pass, fail or skipped. The verdicts of
+  every assert in a suite add up to the verdict of the run: Passed when nothing
+  failed, Failed otherwise. Skipped asserts count for neither. Related:
+  *assert*, *suite*, *skip and only*. See [Custom asserts](#custom-asserts).
+- **suite**: A set of tests run together and reported as one result. In mUnit
+  every assert that registers with an `[mUnit.handler]` belongs to the run, and
+  @suite groups them under a name, by default the suite is the name of the patch
+  they are in. A folder of test patches opened by `[mUnit.harness]` is the usual
+  shape of a suite. Related: *handler*, *harness*, *test wrangler*. See the
+  `[mUnit.handler]` help patcher, [mUnit.handler](#munithandler).
+- **fixture**: Anything a test needs in place before it can run: a dict of
+  settings, a sound file, a reference matrix, a known input signal. Fixtures
+  live next to the test (the references folder, a stimulus in the patch) rather
+  than being made up at run time, so the test sees the same thing every time.
+  Related: *reference*, *stimulus*. See [Dicts and
+  snapshots](#dicts-and-snapshots).
+- **repeatable**: A test is repeatable, or deterministic, when it gives the same
+  verdict every time it runs. Random values, live audio, timing and shared state
+  make a test unrepeatable. mUnit gives you `[mUnit.stimulus~]` for signals that
+  are the same every run, the non-realtime driver, and sequential mode for
+  patches that may interfere with each other. Related: *flaky test*, *stimulus*,
+  *non-realtime driver*. See the `[mUnit.stimulus~]` help patcher.
+- **flaky test**: A test that passes on some runs and fails on others although
+  nothing changed. Common causes in Max are scheduler timing, two test patches
+  sharing a send or receive name, audio hardware, and a loadbang firing before
+  mUnit is ready. Fix the cause rather than retrying: not fixing a flaky test
+  teaches you to ignore failures, which is bad practice. Related: *repeatable*,
+  *timeout*, *sequential mode*. See [mUnit.loadbang](#munitloadbang),
+  [sequentialHarnessExample](examples/sequentialHarnessExample).
+- **timeout**: A limit on how long something may take before it counts as
+  failed, so a run always ends. @timeout on an assert fails it when no verdict
+  arrives within that time; suiteTimeout in the config ends the whole suite,
+  reporting every unfinished assert as failed. A timeout is always a failure,
+  not a pass. Related: *settle*, *verdict*. See [Attrs](#attrs),
+  [mUnit.handler](#munithandler).
+- **skip and only**: @skip 1 reports an assert as skipped without evaluating it,
+  for a feature that is not finished or a machine that cannot run it. @only 1
+  runs just the asserts marked with it and skips the rest, handy while debugging
+  one test. forbidOnly in the config fails the suite when an @only is left in,
+  so it cannot reach CI by mistake. Related: *verdict*, *CI*. See
+  [skipAndOnlyExample](examples/skipAndOnlyExample), [Attrs](#attrs).
+- **test start**: The moment a test may begin sending inputs. In mUnit that is
+  not when the patch loads but when the handler is ready, because the node
+  process behind it takes a moment to start. `[mUnit.loadbang]` bangs at that
+  moment, whether the patch opened before or after it, and replaces `[loadbang]`
+  in test patches. Related: *handler*, *flaky test*, *teardown*. See the
+  `[mUnit.loadbang]` help patcher, [mUnit.loadbang](#munitloadbang).
+- **teardown**: Cleaning up after a test: stopping DSP or a metro, closing a
+  file, setting a global back. `[mUnit.teardown]` bangs once the results of its
+  patch are final, so the cleanup cannot change a verdict, and the handler waits
+  for every teardown before it goes on. Related: *test start*, *suite*. See the
+  `[mUnit.teardown]` help patcher, [teardownExample](examples/teardownExample).
+
+### Asserts in depth
+
+- **helper**: A function you can call inside an expression: approx and equals
+  compare with details, snapshot compares with a reference file, and rms, peak,
+  dc, maxDiff, snr and freq measure a list or a signal. When a helper fails, its
+  expected value, actual value and differences become the failure message. See
+  the expressions helper category for info about what helpers are available.
+  Related: *expression*, *approx()*, *equals()*, *snapshot()*, *measure*. See
+  [Helpers](#helpers), [expectedActualExample](examples/expectedActualExample).
+- **tolerance**: How far a result may be from what you expect and still pass.
+  Floats are rarely exactly equal, so approx takes an absolute and a relative
+  tolerance; a signal passes above an @snr in dB; a matrix passes when at most
+  @maxFraction of its cells differ by more than @maxDiff. @tolerance on an
+  assert is different: how many failed calls a custom or @every assert may have.
+  Related: *helper*, *approx()*, *measure*. See [Helpers](#helpers), [Matrices:
+  Jitter in mUnit.assert](#matrices-jitter-in-munitassert).
+- **table of cases**: Several inputs with their expected outputs, checked by one
+  assert. Each row is a case; @every 1 makes the assert demand that every call
+  is true, and @maxCalls says how many rows to expect. It fails on the first
+  wrong row and names it. Related: *assert*, *expression*. See [Tables of
+  cases](#tables-of-cases), [tableOfCasesExample](examples/tableOfCasesExample).
+- **snapshot**: A copy of a value, saved in a file the first time, that later
+  runs are compared against. snapshot(in1) in an expression compares the input
+  with references/<name>.json next to the test patch and fails when they differ.
+  Snapshots catch changes you did not mean to make, in a dict of settings or a
+  long list, without writing out every expected value. Related: *reference*,
+  *taking references*, *snapshot()*. See [Dicts and
+  snapshots](#dicts-and-snapshots), [snapshotExample](examples/snapshotExample).
+- **reference**: The file a snapshot, matrix or signal assert compares against:
+  a .json, .jxf or .wav in the references folder next to the test patch. A
+  reference is the recorded right answer; commit it with the tests, and when it
+  changes, make sure the change was intended. Related: *snapshot*, *taking
+  references*, *fixture*. See [Dicts and snapshots](#dicts-and-snapshots),
+  [Signals: mUnit.assert~ and
+  mUnit.stimulus~](#signals-munitassert-and-munitstimulus).
+- **taking references**: Writing what the patch produces now as the reference.
+  munit run --take-references, or takeReferences in the config, or inside the
+  patch manually with `takeReference 1` to the handler. Every assert with a
+  reference then passes and writes its file. Look at the diff before you commit:
+  a wrong reference makes a wrong patch pass. Related: *reference*, *snapshot*.
+  See [Dicts and snapshots](#dicts-and-snapshots), [Running a
+  suite](#running-a-suite).
+- **custom assert**: A JavaScript file named in the assert box instead of an
+  expression. It receives the inputs as an array and returns a State: Success or
+  Fail decide at once, Continue means no verdict yet, Skipped skips. Use one
+  when a simple expression cannot say it, such as every input so far is unique.
+  Related: *expression*, *verdict*. See [Custom asserts](#custom-asserts),
+  [customAssert](examples/customAssert).
+- **failure files**: Files an assert keeps when it fails, so you can look at
+  what it saw: the actual dict of a snapshot, a captured signal as actual.wav, a
+  matrix as actual.png next to a diff.png. They are written under artifacts in
+  the output folder and linked from the JSON and JUnit results, which CI systems
+  show on the failed test. Related: *output folder*, *JUnit*. See [Failure
+  files](#failure-files), [failureFilesExample](examples/failureFilesExample).
+
+### Expression helpers
+
+- **inputs: in1 to in10**: What an expression sees: in1 is the value at the
+  second inlet, in2 the third, and so on, up to in10. Ints, floats, symbols,
+  lists and dicts arrive as JavaScript values, so in1 === 'foo', in1.length ===
+  3 and in1.name === 'munit' all work. In `[mUnit.assert~]` each input is a
+  channel of the capture, a list of samples; a matrix arrives with dim, planes,
+  type and its cells. Related: *expression*, *capture*, *matrix input*. See
+  [Assert](#assert), [expectedActualExample](examples/expectedActualExample).
+- **approx()**: approx(actual, expected, abs, rel). True when the two values
+  match within a tolerance: numbers, lists item by item, dicts key by key. The
+  tolerance is the larger of abs (default 0.000001) and rel times the expected
+  value (default 0), so approx(in1, 0.5, 0.001) allows a thousandth either way.
+  On failure the differences are reported, one per line. Related: *tolerance*,
+  *equals()*, *expected versus actual*. See [Helpers](#helpers),
+  [expectedActualExample](examples/expectedActualExample).
+- **equals()**: equals(actual, expected). True when the two values are exactly
+  equal: lists item by item, dicts key by key in any order, symbols as strings.
+  Use it instead of === for lists and dicts, which JavaScript compares by
+  identity, and to get the differences reported when it fails. Related:
+  *approx()*, *expected versus actual*. See [Helpers](#helpers),
+  [expectedActualExample](examples/expectedActualExample).
+- **snapshot()**: snapshot(actual, name). True when the value matches the
+  reference file references/<name>.json next to the test patch. The name
+  defaults to the assert's @name, so give the assert one, or pass a name, which
+  may include a folder: snapshot(in1, 'presets/default'). With no reference yet
+  it fails and says how to take one. Related: *snapshot*, *reference*, *taking
+  references*. See [Dicts and snapshots](#dicts-and-snapshots),
+  [snapshotExample](examples/snapshotExample).
+- **rms()**: rms(values). The root mean square of a list of numbers, the usual
+  measure of how loud a signal is: 0 for silence, about 0.707 for a full-scale
+  sine. rms(in1) > 0 is the default expression of `[mUnit.assert~]`. A single
+  number counts as a list of one. Related: *measure*, *peak()*, *capture*. See
+  [Helpers](#helpers), [signalExample](examples/signalExample).
+- **peak()**: peak(values). The largest absolute value in a list of numbers: the
+  loudest sample of a capture, or the largest magnitude in any list. peak(in1)
+  <= 1 checks that a signal never clips. Related: *measure*, *rms()*. See
+  [Helpers](#helpers), [signalExample](examples/signalExample).
+- **dc()**: dc(values). The mean of a list of numbers, which for a signal is its
+  DC offset. A filter or oscillator that should be centred on zero passes
+  approx(dc(in1), 0, 0.01). Related: *measure*, *rms()*. See
+  [Helpers](#helpers), [signalExample](examples/signalExample).
+- **maxDiff()**: maxDiff(actual, expected). The largest absolute difference
+  between two lists, compared item by item: how far apart two signals or two
+  lists of numbers ever get. maxDiff(in1, in2) < 0.001 says two channels agree
+  sample for sample. Related: *measure*, *snr()*. See [Helpers](#helpers),
+  [signalExample](examples/signalExample).
+- **snr()**: snr(actual, reference). The signal-to-noise ratio of one list
+  against another, in decibels, treating the difference as noise. 60 dB means
+  the two differ by about 0.1 percent; identical lists give infinity. It is what
+  @reference on `[mUnit.assert~]` uses, and it works on any two lists of the
+  same length. Related: *SNR*, *measure*, *maxDiff()*. See [Helpers](#helpers),
+  [Signals: mUnit.assert~ and
+  mUnit.stimulus~](#signals-munitassert-and-munitstimulus).
+- **freq()**: freq(values). The frequency of a captured channel in Hz, found
+  from its zero crossings, precise to a fraction of a Hz even for a short
+  capture. Only in `[mUnit.assert~]`, where the sample rate is known; anywhere
+  else it throws. approx(freq(in1), 440, 1) checks an oscillator. Related:
+  *measure*, *capture*. See [Signals: mUnit.assert~ and
+  mUnit.stimulus~](#signals-munitassert-and-munitstimulus),
+  [signalExample](examples/signalExample).
+- **planeMin(), planeMean(), planeMax()**: planeMin, planeMean, planeMax(matrix,
+  plane). The smallest, the mean and the largest value in one plane of a matrix,
+  plane 0 by default. For char matrices the values run from 0 to 255.
+  approx(planeMean(in1, 0), 0.5, 0.02) checks that a float matrix sits around a
+  half. Related: *matrix input*, *cell()*, *measure*. See [Matrices: Jitter in
+  mUnit.assert](#matrices-jitter-in-munitassert),
+  [jitterExample](examples/jitterExample).
+- **cell()**: cell(matrix, x, y, plane). One cell of a matrix: all its planes as
+  a list, or one plane's value when plane is given. y may be left out for a
+  one-dimensional matrix. cell(in1, 0, 0) === 255 looks at the top left pixel.
+  Related: *matrix input*, *planeMin(), planeMean(), planeMax()*. See [Matrices:
+  Jitter in mUnit.assert](#matrices-jitter-in-munitassert),
+  [jitterExample](examples/jitterExample).
+- **sameMatrix()**: sameMatrix(actual, expected, maxDiff, maxFraction). True
+  when two matrices have the same shape and their cells match within the
+  perceptual tolerance: at most maxFraction of the cells may differ by more than
+  maxDiff, both 0 by default, meaning identical. A failure reports both shapes
+  and how many cells differed. @reference does the same against a .jxf file.
+  Related: *matrix reference*, *tolerance*, *matrix input*. See [Matrices:
+  Jitter in mUnit.assert](#matrices-jitter-in-munitassert),
+  [jitterExample](examples/jitterExample).
+- **matrix input**: How a jit_matrix arrives at an expression: a value with dim
+  (the size per dimension, as a list), planes, type (char, long, float32 or
+  float64) and every cell, so in1.dim`[0]` == 64 && in1.planes == 4 checks the
+  shape, and the matrix helpers read the cells. In the results a matrix appears
+  as its shape and cell count. Related: *inputs: in1 to in10*, *readback*,
+  *matrix reference*. See [Matrices: Jitter in
+  mUnit.assert](#matrices-jitter-in-munitassert),
+  [jitterExample](examples/jitterExample).
+
+### Signals and Jitter
+
+- **stimulus**: A known input you feed into the unit under test.
+  `[mUnit.stimulus~]` makes test signals that are the same sample for sample on
+  every run: a sine, an impulse, a sweep, seeded noise, silence or a sound file.
+  Related: *unit under test*, *repeatable*, *capture*. See the
+  `[mUnit.stimulus~]` help patcher, [signalExample](examples/signalExample).
+- **capture**: The recording `[mUnit.assert~]` makes of its signal inlets, for
+  @duration milliseconds from the test start or from a bang. The expression then
+  sees each channel as a list of samples, so the helpers and measures work on it
+  like on any list. A failing signal assert keeps its capture as actual.wav.
+  Related: *stimulus*, *measure*, *failure files*. See the `[mUnit.assert~]`
+  help patcher, [Signals: mUnit.assert~ and
+  mUnit.stimulus~](#signals-munitassert-and-munitstimulus).
+- **measure**: One number that summarises a signal or a list so an expression
+  can compare it: rms, peak, dc (the mean), freq (the frequency from the zero
+  crossings), maxDiff and snr against another list. Testing a measure is more
+  robust than testing samples one by one. Related: *helper*, *rms()*, *peak()*,
+  *freq()*, *tolerance*. See [Helpers](#helpers),
+  [signalExample](examples/signalExample).
+- **SNR**: Signal-to-noise ratio, in decibels: how close a capture is to its
+  reference, treating the difference as noise. A signal assert with @reference
+  passes when the SNR is at least @snr, 60 dB by default, which is a difference
+  of about 0.1 percent. @exact 1 demands identical samples instead. Related:
+  *reference*, *tolerance*, *latency*, *snr()*. See [Signals: mUnit.assert~ and
+  mUnit.stimulus~](#signals-munitassert-and-munitstimulus).
+- **latency**: A lead or lag, in samples, between a capture and its reference,
+  for example from a delay inside the unit under test. @maxLatency lets the
+  comparison slide the two by up to that many samples; the alignment found is
+  reported as latency in the result. Related: *SNR*, *reference*. See [Signals:
+  mUnit.assert~ and mUnit.stimulus~](#signals-munitassert-and-munitstimulus).
+- **non-realtime driver**: Max's NonRealTime audio driver renders audio as fast
+  as the machine can, needs no audio hardware, and produces the same samples on
+  every run, which is what a test and a CI machine want. The dsp key in the
+  config switches a suite to it, with a sample rate and vector size, and
+  restores your settings afterwards. Related: *repeatable*, *CI*. See [DSP for a
+  suite](#dsp-for-a-suite), [signalExample](examples/signalExample).
+- **matrix reference**: A Jitter matrix saved as a .jxf file that a matrix
+  assert compares against with @reference. GPUs and drivers differ in the last
+  bit, so the comparison takes a perceptual tolerance: @maxDiff 2 @maxFraction
+  0.001 means at most 0.1 percent of the cells may differ by more than 2 out of
+  255. Related: *reference*, *tolerance*, *readback*. See [Matrices: Jitter in
+  mUnit.assert](#matrices-jitter-in-munitassert),
+  [jitterExample](examples/jitterExample).
+- **readback**: Getting what the GPU drew back into a Jitter matrix so an assert
+  can look at it: a jit.gl.pix or jit.gl.texture sent to jit.matrix, or
+  jit.gl.asyncread after a render. It needs a visible destination, such as a
+  named jit.pwindow in the test patch, and a display on the machine that runs
+  the test. Related: *matrix reference*. See [Matrices: Jitter in
+  mUnit.assert](#matrices-jitter-in-munitassert),
+  [jitterExample](examples/jitterExample).
+
+### Running suites
+
+- **handler**: `[mUnit.handler]`, the object that runs a suite: every assert
+  registers with it, it collects their verdicts, decides when the run is
+  finished, writes the results and the log, and applies the configuration. One
+  handler per run; a second one would collect everything twice. Related:
+  *suite*, *harness*, *settle*. See the `[mUnit.handler]` help patcher,
+  [mUnit.handler](#munithandler).
+- **harness**: `[mUnit.harness]`, which points the handler at a munit.config.js
+  and opens a folder of test patches, all at once or one at a time, so one patch
+  runs a whole suite. More generally, a harness is whatever holds the tests and
+  runs them. Related: *handler*, *test wrangler*, *sequential mode*. See the
+  `[mUnit.harness]` help patcher,
+  [loadInFolderExample](examples/loadInFolderExample).
+- **test wrangler**: The patch you open to run a suite: a harness connected to a
+  handler, saved next to the config and the folder of tests. `munit init` on the
+  cli writes one as runTests.maxpat; open it in Max, or give it to `munit run`.
+  Related: *harness*, *handler*, *runner*. See [Starting a
+  suite](#starting-a-suite),
+  [loadInFolderExample](examples/loadInFolderExample).
+- **registration**: An assert announces itself to the handler when its patch
+  loads, so the handler knows what to wait for. The run finishes once every
+  registered assert has reported and nothing new has registered for a settle
+  window. A run in which no assert registers cannot pass and the command line
+  exits with 2 in this case. Related: *handler*, *settle*, *exit code*. See
+  [mUnit.handler](#munithandler).
+- **settle**: The quiet time the handler waits for after the last assert
+  reported before it calls the run finished: settleMs in the config, 1000 ms by
+  default. It gives late patches time to register and the console output of the
+  last test time to arrive. Related: *registration*, *timeout*. See
+  [Configuration](#configuration).
+- **sequential mode**: Opening one test patch at a time, waiting until its
+  asserts have finished, closing it and opening the next, with @sequential 1 on
+  the harness or --sequential on the command line. Slower than opening every
+  patch at once, but patches cannot interfere through shared send and receive
+  names, DSP or CPU load. Related: *harness*, *flaky test*. See
+  [sequentialHarnessExample](examples/sequentialHarnessExample),
+  [mUnit.Harness](#munitharness).
+- **configuration**: A munit.config.js next to the test wrangler that tells the
+  handler how to run: where results go, which formatters write them, the settle
+  and timeout values, DSP settings for signal tests, whether console errors fail
+  the suite. The harness loads it, and every key is optional. Related:
+  *handler*, *harness*, *output folder*. See [Configuration](#configuration),
+  [simpleConfigExample](examples/simpleConfigExample).
+- **runner**: The program that starts the tests for you and reports the result:
+  on the command line, `munit run`. It starts Max, opens the suite, prints each
+  verdict, quits Max and exits with a code a script can act on, so a suite can
+  run from a terminal or a CI job without anyone clicking. Related: *exit code*,
+  *CI*, *test wrangler*. See [Running a suite](#running-a-suite), [munit-cli on
+  npm](https://www.npmjs.com/package/munit-cli).
+- **exit code**: The number a command line program ends with, which scripts and
+  CI read as its result. `munit run` and `munit lint` exit with 0 when
+  everything passed, 1 when something failed, and 2 when they could not run at
+  all, such as Max not starting or no asserts registering. Related: *runner*,
+  *CI*. See [Running a suite](#running-a-suite), [Linting
+  patchers](#linting-patchers).
+
+### Results and CI
+
+- **CI**: Continuous integration: a server that runs your tests on every push
+  and refuses, or at least flags, a change that breaks them. A Max suite needs a
+  machine with Max installed and a logged-in desktop session; the linter runs
+  anywhere. mUnit talks to CI through exit codes and JUnit files. Related: *exit
+  code*, *JUnit*, *lint*. See [Running a suite](#running-a-suite),
+  [JUnitResultsExample](examples/JUnitResultsExample).
+- **result formatter**: How the handler writes the results of a run: Json by
+  default, JUnit for CI, Html to read in a browser, or a formatter you write in
+  JavaScript, and several at once if you like. Each one writes a results file
+  into the output folder. Related: *JUnit*, *log formatter*, *output folder*.
+  See [Result Formatter](#result-formatter),
+  [customResultAndLogFormatters](examples/customResultAndLogFormatters).
+- **JUnit**: An XML format for test results that nearly every CI system
+  understands: GitHub Actions, GitLab, Jenkins and the rest. mUnit writes it
+  with the JUnit result formatter, one testsuite per suite, each failure with
+  its message, expected versus actual and links to its files. Related: *result
+  formatter*, *CI*, *failure files*. See [Result Formatter](#result-formatter),
+  [The JUnit XML format](https://github.com/testmoapp/junitxml).
+- **log formatter**: How the console output captured during a run is written to
+  the log file, log.txt by default. A custom log formatter reshapes the lines,
+  for example into the format your CI provider shows best. Log output filters
+  leave matching lines out, to keep secrets out of a shared console. Related:
+  *result formatter*, *output folder*. See [Log Formatter](#log-formatter),
+  [customResultAndLogFormatters](examples/customResultAndLogFormatters).
+- **output folder**: Where a run writes its results, its log and its failure
+  files: outputDir in the config, logs next to the config by default, or
+  --output on the command line. With runFolder set each run gets its own
+  timestamped folder inside it. Related: *configuration*, *failure files*. See
+  [Configuration](#configuration).
+- **console errors**: Anything printed to the Max console as an error while the
+  suite runs. With ignoreConsoleErrors set to false in the config, one error
+  fails the whole run even if every assert passed, which catches problems no
+  assert was watching for. Related: *configuration*, *verdict*. See
+  [consoleErrorExample](examples/consoleErrorExample), [Ignore Console
+  Errors](#ignore-console-errors).
+
+### Linting
+
+- **lint**: Checking a patcher file for problems by reading the saved file
+  against a set of rules, without opening or running it: eg. no zl.reg in this
+  project, every v8 has @autowatch 0, no fan-out without a trigger. munit lint
+  does it from the command line and in CI; `[mUnit.lint]` does it in Max every
+  time you save. Related: *rule*, *finding*, *lint server*. See the
+  `[mUnit.lint]` help patcher, [Linting patchers](#linting-patchers),
+  [lintExample](examples/lintExample).
+- **rule**: One check the linter makes, written as a JSON object: a kind that
+  says what is checked, settings that say on what, a level, a message, and
+  optinally a fix. When the JSON kinds cannot say it, a rule of kind `script`
+  names a JavaScript module that does. Related: *lint*, *level*, *fix*. See
+  [Rules](#rules), [lintExample](examples/lintExample).
+- **finding**: One thing a rule reports about one box: the rule, its level, the
+  file and the subpatchers on the way to the box, its position, and the message.
+  The Max console, the text report and the JUnit report all list findings;
+  --format json prints them for a tool to read. Related: *rule*, *level*. See
+  [Linting patchers](#linting-patchers).
+- **level**: How serious a rule's findings are: off, warn or block. A warning is
+  shown and nothing more; a blocking finding makes munit lint exit with 1, which
+  fails the CI job. Start a new rule at warn, and raise it to block once the
+  project is clean. Related: *rule*, *exit code*, *override*. See
+  [Rules](#rules).
+- **config cascade**: How the munit-lint.json files that apply to a patch are
+  found and combined: every one in the patch's folder and in the folders above
+  it, outermost first, until one says root is true. Each inner config adds to
+  the outer ones, so a subfolder can be stricter than its project without
+  repeating it. Related: *override*, *lint server*. See
+  [Configuration](#configuration-1),
+  [lintConfigExample](examples/lintConfigExample).
+- **override**: A per-file change of rule levels in a config: help files held to
+  a different standard than test patches, a legacy folder where a rule is off.
+  Later overrides win, and --list-rules shows the rules in force for a file
+  after every override. Related: *config cascade*, *level*. See
+  [Configuration](#configuration-1).
+- **fix**: An edit a rule knows how to make: replace an object, set an
+  attribute. munit lint --fix, the fix message to `[mUnit.lint]` or the Apply
+  fixes switch in the lint server apply them and write the patches back, as
+  small edits that leave the rest of the file as Max saved it. Related: *rule*,
+  *lint server*. See [Fixing](#fixing).
+- **lint server**: `[mUnit.lint]` left running while you work, so every patch
+  you save is linted at once and the findings appear in the Max console. Extras
+  > mUnit > mUnit Lint Server is a ready-made one: automatic for whatever you
+  save anywhere, or watching a project folder as the top of the config cascade.
+  Related: *lint*, *config cascade*, *fix*. See **Extras > mUnit > mUnit Lint
+  Server**, [Linting in Max, as you save](#linting-in-max-as-you-save).
+<!-- glossary:end -->
 
 ## Licence
 

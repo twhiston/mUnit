@@ -8,8 +8,12 @@
 	</digest>
 
 	<description>
-		<o>mUnit.lint</o> watches <at>folder</at> and checks every patcher file in it (.maxpat, .maxhelp, .gendsp, .rnbopat) against your lint rules the moment it is saved, without leaving Max. Findings go to the Max console: a <m>warn</m> rule posts a warning, a <m>block</m> rule posts an error, and one line per file sums up. The patch you are editing is checked too, even outside the folder: the object keeps an eye on the front window. <at>followfront</at> <m>0</m> turns that off, so only <at>folder</at> and below is linted. The rules come from <m>munit-lint.json</m> files, which cascade: for each file, every config in its folder and the folders above it applies, outermost first, up to one that says <m>root</m>; an inner config adds rules, overrides and ignore patterns to the outer ones and may replace a rule by id or the files list. <at>config</at> names one file that applies alone instead; without any config the built-in <m>mUnit:recommended</m> set applies. <at>root</at> makes the folder the top of the cascade, so a config above it is ignored: project mode, with <at>folder</at> at the root of a repository. <at>folder</at> <m>none</m> watches no folder at all: the patch in front is linted when it is saved, wherever it is, with the configs in and above its own folder; that is how <m>Extras &gt; mUnit Lint Server</m> runs, a patch to leave open while you work. Every path in a config is relative to the config file's folder. The help patcher's config tab and the lintConfigExample extra show this with a project of several folders. The same rules and the same engine run from the command line as <m>munit lint</m> (the munit-cli npm package, or javascript/nodejs/runner/munit-cli.js inside this package), so what passes here passes in CI. The patch holding <o>mUnit.lint</o> must be saved, since <at>folder</at> is relative to it. To silence a rule in one patcher, add a comment box there reading <m>munit-lint disable</m> followed by the rule id.
+		<o>mUnit.lint</o> watches <at>folder</at> and checks every patcher file in it (.maxpat, .maxhelp, .gendsp, .rnbopat) against your lint rules the moment it is saved, without leaving Max. Findings go to the Max console: a <m>warn</m> rule posts a warning, a <m>block</m> rule posts an error, and one line per file sums up. The patch you are editing is checked too, even outside the folder: the object keeps an eye on the front window. The patch holding <o>mUnit.lint</o> must be saved, since <at>folder</at> is relative to it.
 	</description>
+
+	<discussion>
+		<at>followfront</at> <m>0</m> turns the front-window check off, so only <at>folder</at> and below is linted. The rules come from <m>munit-lint.json</m> files, which cascade: for each file, every config in its folder and the folders above it applies, outermost first, up to one that says <m>root</m>; an inner config adds rules, overrides and ignore patterns to the outer ones and may replace a rule by id or the files list. <at>config</at> names one file that applies alone instead; without any config the built-in <m>mUnit:recommended</m> set applies. <at>root</at> makes the folder the top of the cascade, so a config above it is ignored: project mode, with <at>folder</at> at the root of a repository. <at>folder</at> <m>none</m> watches no folder at all: the patch in front is linted when it is saved, wherever it is, with the configs in and above its own folder; that is how <m>Extras &gt; mUnit Lint Server</m> runs, a patch to leave open while you work. Every path in a config is relative to the config file's folder. The help patcher's config tab and the lintConfigExample extra show this with a project of several folders. The same rules and the same engine run from the command line as <m>munit lint</m> (the munit-cli npm package, or javascript/nodejs/runner/munit-cli.js inside this package), so what passes here passes in CI. To silence a rule in one patcher, add a comment box there reading <m>munit-lint disable</m> followed by the rule id.
+	</discussion>
 
 	<!--METADATA-->
 	<metadatalist>
@@ -23,7 +27,7 @@
 	<!--INLETS-->
 	<inletlist>
 		<inlet id="0" type="INLET_TYPE">
-			<digest>Messages: start, stop, lint, lint &lt;path&gt;, fix, fix &lt;path&gt;, folder &lt;path&gt;, root &lt;0|1&gt;, followfront &lt;0|1&gt;, status</digest>
+			<digest>Messages: start, stop, lint, lint &lt;path&gt;, fix, fix &lt;path&gt;, folder &lt;path&gt;, root &lt;0|1&gt;, followfront &lt;0|1&gt;, autofix &lt;0|1&gt;, output &lt;path|none&gt;, format &lt;auto|text|json|junit&gt;, status</digest>
 		</inlet>
 	</inletlist>
 
@@ -31,10 +35,10 @@
 	<outletlist>
 		<outlet id="0" type="dictionary">
 			<digest>The findings of every lint, as a dictionary</digest>
-			<description>With <m>files</m>, <m>summary</m> (files, block, warn, errors), <m>findings</m> (rule, level, file, patchers, location, box, position, message; <m>patchers</m> lists the subpatchers on the way to the box and is empty at the top level) and <m>errors</m>, for building your own display.</description>
+			<description>With <m>files</m>, <m>summary</m> (files, block, warn, errors), <m>findings</m> (rule, level, file, patchers, location, box, position, message; <m>patchers</m> lists the subpatchers on the way to the box and is empty at the top level), <m>errors</m> and <m>text</m> (the one-line summary as posted to the console), for building your own display.</description>
 		</outlet>
 		<outlet id="1" type="INLET_TYPE">
-			<digest>Messages from the server, e.g. started</digest>
+			<digest>Messages from the server: started, state watching, state stopped</digest>
 		</outlet>
 	</outletlist>
 
@@ -64,6 +68,20 @@
 			</arglist>
 			<digest>Set the folder to watch at run time</digest>
 			<description>The same as <at>folder</at>, also as Max writes paths (from <o>opendialog</o> with <m>fold</m>, say) or <m>none</m>; takes effect at the next <m>start</m>. <m>root</m> 0 or 1 sets <at>root</at> the same way, and <m>followfront</m> 0 or 1 sets <at>followfront</at>.</description>
+		</method>
+		<method name="autofix">
+			<arglist>
+				<arg name="flag" type="int" />
+			</arglist>
+			<digest>Set @autofix at run time</digest>
+			<description>1: from the next lint on, the fixes the rules describe are applied and the files written back, as <m>fix</m> does; 0: lint only. A saved patch is then linted about two seconds after the save rather than at once, so that Max, which ignores changes to a file for a moment after saving it, reloads the fixed patch.</description>
+		</method>
+		<method name="output">
+			<arglist>
+				<arg name="path" type="symbol" />
+			</arglist>
+			<digest>Set @output at run time: a report file, or none</digest>
+			<description>The same as <at>output</at>, also as Max writes paths (from <o>savedialog</o>, say). <m>format</m> sets <at>format</at> the same way. Both take effect at the next lint.</description>
 		</method>
 		<method name="status">
 			<digest>Post what the front-patcher helper has seen</digest>
@@ -100,15 +118,27 @@
 			<digest>Extra rule files, on top of the config</digest>
 			<description>Relative to the patch. The same as the command line's <m>--rules</m>.</description>
 		</attribute>
+		<attribute name="autofix" get="1" set="1" type="int" size="1">
+			<digest>Whether every lint applies the fixes the rules describe (default 0)</digest>
+			<description>With 1, each lint, on save or on <m>lint</m>, applies the fixes the rules describe and writes the files back, the way <m>fix</m> does, and the console says how many were fixed. Max reloads an open patch whose file changes on disk, so the fix appears in the patch in front; because Max ignores such a change for a moment after saving the file itself, a save is linted about two seconds later with <at>autofix</at> on, rather than at once. The command line's <m>--fix</m> does the same.</description>
+		</attribute>
+		<attribute name="output" get="1" set="1" type="symbol" size="1">
+			<digest>A file the report of every lint is written to (default none)</digest>
+			<description>Relative to the patch; absolute paths work too. After every lint the file is written again with that lint's report, in the format <at>format</at> says: the whole folder after <m>start</m> or <m>lint</m>, one patch after a save. The same as the command line's <m>--output</m>, for feeding an editor, a dashboard or a CI step while you work. <m>none</m> writes no file.</description>
+		</attribute>
+		<attribute name="format" get="1" set="1" type="symbol" size="1">
+			<digest>The report file's format: auto, text, json or junit (default auto)</digest>
+			<description>With <m>auto</m>, the extension of <at>output</at> decides: <m>.json</m> is JSON, <m>.xml</m> is JUnit, anything else is text. The same formats as the command line's <m>--format</m>.</description>
+		</attribute>
 	</attributelist>
 
 	<!--OUTPUT-->
 	<misc name="Output">
 		<entry name="dictionary">
-			<description>Out left outlet: the findings of every lint, as a dictionary with <m>files</m>, <m>summary</m> (files, block, warn, errors), <m>findings</m> (rule, level, file, patchers, location, box, position, message; <m>patchers</m> lists the subpatchers on the way to the box and is empty at the top level) and <m>errors</m>, for building your own display.</description>
+			<description>Out left outlet: the findings of every lint, as a dictionary with <m>files</m>, <m>summary</m> (files, block, warn, errors), <m>findings</m> (rule, level, file, patchers, location, box, position, message; <m>patchers</m> lists the subpatchers on the way to the box and is empty at the top level), <m>errors</m> and <m>text</m> (the one-line summary as posted to the console, e.g. <m>main.maxpat: 2 warnings</m>), for building your own display.</description>
 		</entry>
 		<entry name="anything">
-			<description>Out right outlet: the server's messages, e.g. <m>started</m> when the node script has booted.</description>
+			<description>Out right outlet: the server's messages: <m>started</m> when the node script has booted, <m>state watching</m> when it starts watching and <m>state stopped</m> when it stops or a start is refused, for a running light.</description>
 		</entry>
 	</misc>
 

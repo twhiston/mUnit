@@ -1214,7 +1214,7 @@
     "script": {
       "type": "object",
       "title": "script",
-      "description": "A JavaScript module decides what to report: it exports check(ctx) and is called with the document and the patchers in scope. A CommonJS module, loaded by munit lint and by [mUnit.lint] in Max alike. See api/munit-lint for what ctx offers.",
+      "description": "A JavaScript module decides what to report: it exports check(ctx) and is called with the document and the patchers in scope. A CommonJS module, loaded by munit lint and by [mUnit.lint] in Max alike. See api/markdown/munit-lint (or Extras > mUnit > mUnit API) for what ctx offers.",
       "properties": {
         "$schema": {
           "type": "string",
@@ -1264,7 +1264,7 @@
         },
         "kind": {
           "const": "script",
-          "description": "A JavaScript module decides what to report: it exports check(ctx) and is called with the document and the patchers in scope. A CommonJS module, loaded by munit lint and by [mUnit.lint] in Max alike. See api/munit-lint for what ctx offers."
+          "description": "A JavaScript module decides what to report: it exports check(ctx) and is called with the document and the patchers in scope. A CommonJS module, loaded by munit lint and by [mUnit.lint] in Max alike. See api/markdown/munit-lint (or Extras > mUnit > mUnit API) for what ctx offers."
         },
         "module": {
           "type": "string",

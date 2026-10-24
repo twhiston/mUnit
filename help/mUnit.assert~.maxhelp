@@ -115,25 +115,9 @@
 									"patching_rect": [
 										10,
 										10,
-										620,
-										125
+										790,
+										140
 									]
-								}
-							},
-							{
-								"box": {
-									"id": "obj-2",
-									"maxclass": "comment",
-									"numinlets": 1,
-									"numoutlets": 0,
-									"patching_rect": [
-										20,
-										150,
-										780,
-										91
-									],
-									"text": "[mUnit.assert~] is an assert for signals. It records @duration ms (default 1000) of its signal inlets into its own buffer~, starting when the suite starts (@trigger auto) or on a bang to the left inlet (@trigger manual), then evaluates the expression with each channel as a list of samples: in1, and with @channels 2 also in2. All the mUnit.assert helpers and attributes apply, plus freq(x): the frequency in Hz from the zero crossings. The default expression is rms(in1) > 0. The outlet bangs once the capture has been evaluated. Give it a @timeout, so a suite with DSP off still ends.",
-									"linecount": 6
 								}
 							},
 							{
@@ -144,7 +128,7 @@
 									"numoutlets": 1,
 									"patching_rect": [
 										20,
-										256,
+										170,
 										300,
 										22
 									],
@@ -162,7 +146,7 @@
 									"numoutlets": 1,
 									"patching_rect": [
 										20,
-										291,
+										205,
 										741,
 										22
 									],
@@ -180,7 +164,7 @@
 									"numoutlets": 0,
 									"patching_rect": [
 										20,
-										326,
+										240,
 										99,
 										22
 									],
@@ -195,7 +179,7 @@
 									"numoutlets": 0,
 									"patching_rect": [
 										20,
-										356,
+										270,
 										741,
 										22
 									],
@@ -210,7 +194,7 @@
 									"numoutlets": 1,
 									"patching_rect": [
 										20,
-										393,
+										307,
 										288,
 										22
 									],
@@ -228,7 +212,7 @@
 									"numoutlets": 1,
 									"patching_rect": [
 										20,
-										428,
+										342,
 										105,
 										22
 									],
@@ -246,7 +230,7 @@
 									"numoutlets": 1,
 									"patching_rect": [
 										20,
-										463,
+										377,
 										609,
 										22
 									],
@@ -264,7 +248,7 @@
 									"numoutlets": 0,
 									"patching_rect": [
 										20,
-										493,
+										407,
 										609,
 										36
 									],
@@ -280,7 +264,7 @@
 									"numoutlets": 1,
 									"patching_rect": [
 										20,
-										549,
+										463,
 										225,
 										22
 									],
@@ -298,7 +282,7 @@
 									"numoutlets": 2,
 									"patching_rect": [
 										20,
-										584,
+										498,
 										92,
 										22
 									],
@@ -317,7 +301,7 @@
 									"numoutlets": 0,
 									"patching_rect": [
 										265,
-										549,
+										463,
 										535,
 										118
 									],

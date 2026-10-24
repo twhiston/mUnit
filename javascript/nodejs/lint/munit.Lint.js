@@ -566,9 +566,12 @@ __name(relatedFilesOf, "relatedFilesOf");
 var path2 = __toESM(require("node:path"));
 var import_lint2 = require("@munit-shared/lint");
 var DEBOUNCE_MS = 200;
+var FIX_DEBOUNCE_MS = 2e3;
 var RECENT_SAVE_MS = 3e3;
 var PATCH_EXTENSIONS = [".maxpat", ".maxhelp", ".gendsp", ".rnbopat"];
 var NO_FOLDER = "none";
+var NO_OUTPUT = "none";
+var AUTO_FORMAT = "auto";
 function isOn(flag) {
   return flag === true || flag === 1 || flag === "1" || flag === "true";
 }
@@ -595,6 +598,12 @@ var LintServer = class {
   config = null;
   // Extra rule files (@rules), like the CLI's --rules
   rules = [];
+  // Apply the fixes the rules describe with every lint (@autofix 1)
+  autoFix = false;
+  // A file the report of every lint is written to (@output), or null
+  output = null;
+  // Its format (@format); auto: by the file's extension
+  format = AUTO_FORMAT;
   // The disable comment is explained once, with the first finding
   hinted = false;
   // Between start and stop
@@ -630,6 +639,31 @@ var LintServer = class {
   setRules(files) {
     this.rules = files.filter((f) => f !== "");
   }
+  setAutoFix(flag) {
+    this.autoFix = isOn(flag);
+  }
+  get fixing() {
+    return this.autoFix;
+  }
+  // A file the report of every lint is written to, or none; relative to the host folder
+  setOutput(file) {
+    this.output = file === "" || file === NO_OUTPUT ? null : file;
+  }
+  // text, json or junit; auto: json for a .json file, junit for .xml, else text
+  setFormat(format) {
+    if (format === AUTO_FORMAT || import_lint2.REPORT_FORMATS.includes(format)) {
+      this.format = format;
+      return;
+    }
+    this.deps.post("error", `unknown format ${format}: use ${AUTO_FORMAT}, ${import_lint2.REPORT_FORMATS.join(", ")}`);
+  }
+  formatFor(file) {
+    if (this.format !== AUTO_FORMAT) {
+      return this.format;
+    }
+    const ext = path2.extname(file).toLowerCase();
+    return ext === ".json" ? "json" : ext === ".xml" ? "junit" : "text";
+  }
   resolve(p) {
     if (path2.isAbsolute(p)) {
       return path2.normalize(p);
@@ -657,14 +691,17 @@ var LintServer = class {
     return root;
   }
   // Watch the folder and lint everything in it once; without a folder, wait
-  // for a patch to come to the front
+  // for a patch to come to the front. A start that is refused leaves the
+  // server stopped, and says so on the outlet
   start() {
     const root = this.folderToWatch();
     if (root === null) {
+      this.state("stopped");
       return;
     }
     if (root !== void 0 && !this.deps.lint.isDirectory(root)) {
       this.deps.post("error", `${root} is not a folder`);
+      this.state("stopped");
       return;
     }
     this.stop(true);
@@ -673,6 +710,7 @@ var LintServer = class {
     if (root === void 0) {
       this.watchExtras();
       this.deps.post("info", `no folder to watch: the patch in front is linted when you save it, with the ${import_lint2.CONFIG_FILE_NAME} files in and above its own folder`);
+      this.state("watching");
       return;
     }
     this.watched = root;
@@ -681,6 +719,7 @@ var LintServer = class {
     }));
     this.watchExtras();
     this.deps.post("info", `watching ${root}${this.rootFlag ? " as the top of the config cascade" : ""}${this.followFront ? "" : ", and nothing outside it"}; findings are posted here as you save`);
+    this.state("watching");
     const run = this.lintEverything();
     if (run === null) {
       return;
@@ -703,9 +742,29 @@ var LintServer = class {
     this.pending.clear();
     if (this.active && !quiet) {
       this.deps.post("info", "stopped watching");
+      this.state("stopped");
     }
     this.active = false;
     this.watched = null;
+  }
+  state(value) {
+    this.deps.outlet("state", value);
+  }
+  // The report of a lint to the @output file, when there is one
+  write(run) {
+    if (this.output === null) {
+      return;
+    }
+    const file = this.resolve(this.output);
+    if (file === null) {
+      this.deps.post("error", `save the patch first: output ${this.output} is relative to its folder`);
+      return;
+    }
+    try {
+      this.deps.lint.writeFile(file, (0, import_lint2.render)(run, this.formatFor(file)));
+    } catch (e) {
+      this.deps.post("error", `cannot write ${file}: ${String(e)}`);
+    }
   }
   lintAll() {
     if (this.folder === null && this.followFront && this.extra.size === 0) {
@@ -740,7 +799,11 @@ var LintServer = class {
     if (fresh) {
       const modified = this.deps.modifiedAt(file);
       if (modified !== null && Date.now() - modified < RECENT_SAVE_MS) {
-        this.run(file);
+        if (this.autoFix) {
+          this.schedule(file);
+        } else {
+          this.run(file);
+        }
       }
     }
   }
@@ -795,6 +858,11 @@ var LintServer = class {
     if (!inRoot && !this.extraDirs.has(path2.dirname(file))) {
       return;
     }
+    this.schedule(file);
+  }
+  // Lints a saved file once the save has settled: soon, or with @autofix 1
+  // late enough for Max to reload the fix into the open patch
+  schedule(file) {
     const existing = this.pending.get(file);
     if (existing !== void 0) {
       this.deps.clearTimer(existing);
@@ -804,7 +872,7 @@ var LintServer = class {
       if (this.deps.lint.exists(file)) {
         this.run(file);
       }
-    }, DEBOUNCE_MS));
+    }, this.autoFix ? FIX_DEBOUNCE_MS : DEBOUNCE_MS));
   }
   lint(target, fix = false) {
     const cwd = this.watched ?? (this.folder === null ? path2.dirname(target) : this.resolve(".") ?? path2.dirname(target));
@@ -812,7 +880,7 @@ var LintServer = class {
     const root = this.rootFlag ? project : void 0;
     const config = this.config === null ? null : this.resolve(this.config);
     const ruleFiles = this.rules.map((f) => this.resolve(f) ?? f);
-    return runLint({ target, cwd, config, ruleFiles, project, root, format: "text", output: null, colour: false, fix }, this.deps.lint);
+    return runLint({ target, cwd, config, ruleFiles, project, root, format: "text", output: null, colour: false, fix: fix || this.autoFix }, this.deps.lint);
   }
   run(target) {
     const run = this.lint(target);
@@ -890,12 +958,15 @@ var LintServer = class {
     }
     const summary = (0, import_lint2.summarise)(run);
     const files = run.files.length === 1 ? run.files[0] : `${run.files.length} files`;
-    this.deps.post("info", `${files}: ${(0, import_lint2.summaryText)(summary)}`);
+    const text = `${files}: ${(0, import_lint2.summaryText)(summary)}`;
+    this.deps.post("info", text);
+    this.write(run);
     const message = {
       files: run.files,
       summary,
       findings: run.diagnostics.map(({ edits: _edits, ...rest }) => rest),
-      errors: run.errors
+      errors: run.errors,
+      text
     };
     this.deps.outlet("findings", message);
   }
@@ -1044,6 +1115,15 @@ import_max_api.default.addHandler("config", (file) => {
 });
 import_max_api.default.addHandler("rules", (...files) => {
   server.setRules(files.map(String));
+});
+import_max_api.default.addHandler("autofix", (flag) => {
+  server.setAutoFix(flag ?? 1);
+});
+import_max_api.default.addHandler("output", (file) => {
+  server.setOutput(file === void 0 ? "" : String(file));
+});
+import_max_api.default.addHandler("format", (format) => {
+  server.setFormat(String(format ?? "auto"));
 });
 import_max_api.default.addHandler("done", () => {
   server.start();

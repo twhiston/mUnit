@@ -3,7 +3,7 @@
 		"fileversion": 1,
 		"appversion": {
 			"major": 9,
-			"minor": 1,
+			"minor": 2,
 			"revision": 0,
 			"architecture": "x64",
 			"modernui": 1
@@ -13,7 +13,7 @@
 			80,
 			80,
 			520,
-			300
+			220
 		],
 		"bglocked": 0,
 		"openinpresentation": 0,
@@ -28,18 +28,74 @@
 		"boxes": [
 			{
 				"box": {
-					"id": "obj-1",
+					"id": "hdr-panel",
+					"maxclass": "panel",
+					"numinlets": 1,
+					"numoutlets": 0,
+					"patching_rect": [
+						0,
+						0,
+						520,
+						64
+					],
+					"angle": 0,
+					"mode": 0,
+					"proportion": 0.39,
+					"shadow": -1,
+					"background": 1,
+					"bgcolor": [
+						0.16,
+						0.17,
+						0.2,
+						1
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "hdr-title",
 					"maxclass": "comment",
 					"numinlets": 1,
 					"numoutlets": 0,
 					"patching_rect": [
 						20,
-						10,
+						11,
 						480,
 						29
 					],
-					"linecount": 1,
-					"text": "two: passes, and is torn down before the harness closes it"
+					"text": "tests/test_two.maxpat",
+					"fontface": 1,
+					"fontsize": 20,
+					"textcolor": [
+						0.97,
+						0.97,
+						0.97,
+						1
+					],
+					"linecount": 1
+				}
+			},
+			{
+				"box": {
+					"id": "hdr-sub",
+					"maxclass": "comment",
+					"numinlets": 1,
+					"numoutlets": 0,
+					"patching_rect": [
+						20,
+						41,
+						480,
+						20
+					],
+					"text": "two: passes, and is torn down before the harness closes it",
+					"fontsize": 12,
+					"textcolor": [
+						0.75,
+						0.77,
+						0.82,
+						1
+					],
+					"linecount": 1
 				}
 			},
 			{
@@ -53,7 +109,7 @@
 					],
 					"patching_rect": [
 						20,
-						45,
+						96,
 						105,
 						22
 					],
@@ -71,7 +127,7 @@
 					],
 					"patching_rect": [
 						20,
-						80,
+						131,
 						30,
 						22
 					],
@@ -87,7 +143,7 @@
 					"outlettype": [],
 					"patching_rect": [
 						20,
-						115,
+						166,
 						220.5,
 						22
 					],
@@ -105,7 +161,7 @@
 					],
 					"patching_rect": [
 						300,
-						45,
+						96,
 						105,
 						22
 					],
@@ -123,7 +179,7 @@
 					],
 					"patching_rect": [
 						300,
-						80,
+						131,
 						98.5,
 						22
 					],
@@ -141,7 +197,7 @@
 					],
 					"patching_rect": [
 						300,
-						115,
+						166,
 						118,
 						22
 					],

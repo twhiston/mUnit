@@ -76,6 +76,10 @@ function folder(value) {
     const given = value === undefined ? '' : String(value);
     outlet(0, 'folder', given === '' || given === 'none' ? given : (0, libmunit_1.toNativePath)(given));
 }
+function output(value) {
+    const given = value === undefined ? '' : String(value);
+    outlet(0, 'output', given === '' || given === 'none' ? given : (0, libmunit_1.toNativePath)(given));
+}
 function notifydeleted() {
     poller.cancel();
 }

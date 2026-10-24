@@ -115,25 +115,9 @@
 									"patching_rect": [
 										10,
 										10,
-										620,
-										125
+										790,
+										140
 									]
-								}
-							},
-							{
-								"box": {
-									"id": "obj-2",
-									"maxclass": "comment",
-									"numinlets": 1,
-									"numoutlets": 0,
-									"patching_rect": [
-										20,
-										150,
-										780,
-										63
-									],
-									"text": "[mUnit.stimulus~] makes a repeatable test signal for mUnit.assert~. It starts when the suite starts (@trigger auto, the default) or on a bang (@trigger manual), at the same moment as an mUnit.assert~ capture, and stop stops it. Everything but a sound file is computed sample by sample from a counter in gen~, so two runs give the same samples whatever the vector size. The types are on the next tab.",
-									"linecount": 4
 								}
 							},
 							{
@@ -144,7 +128,7 @@
 									"numoutlets": 1,
 									"patching_rect": [
 										20,
-										228,
+										170,
 										300,
 										22
 									],
@@ -162,7 +146,7 @@
 									"numoutlets": 1,
 									"patching_rect": [
 										20,
-										263,
+										205,
 										722,
 										22
 									],
@@ -180,7 +164,7 @@
 									"numoutlets": 0,
 									"patching_rect": [
 										20,
-										293,
+										235,
 										722,
 										22
 									],
@@ -195,7 +179,7 @@
 									"numoutlets": 1,
 									"patching_rect": [
 										20,
-										330,
+										272,
 										99,
 										22
 									],
@@ -213,7 +197,7 @@
 									"numoutlets": 1,
 									"patching_rect": [
 										20,
-										365,
+										307,
 										67,
 										22
 									],
@@ -231,7 +215,7 @@
 									"numoutlets": 2,
 									"patching_rect": [
 										20,
-										400,
+										342,
 										42,
 										22
 									],
@@ -250,7 +234,7 @@
 									"numoutlets": 1,
 									"patching_rect": [
 										100,
-										435,
+										377,
 										344,
 										22
 									],
@@ -271,7 +255,7 @@
 									],
 									"patching_rect": [
 										464,
-										400,
+										342,
 										36,
 										22
 									],
@@ -286,7 +270,7 @@
 									"numoutlets": 1,
 									"patching_rect": [
 										20,
-										470,
+										412,
 										634,
 										22
 									],
@@ -304,7 +288,7 @@
 									"numoutlets": 0,
 									"patching_rect": [
 										20,
-										500,
+										442,
 										634,
 										36
 									],
@@ -320,7 +304,7 @@
 									"numoutlets": 1,
 									"patching_rect": [
 										20,
-										556,
+										498,
 										225,
 										22
 									],
@@ -338,7 +322,7 @@
 									"numoutlets": 2,
 									"patching_rect": [
 										20,
-										591,
+										533,
 										92,
 										22
 									],
@@ -357,7 +341,7 @@
 									"numoutlets": 0,
 									"patching_rect": [
 										265,
-										556,
+										498,
 										535,
 										118
 									],

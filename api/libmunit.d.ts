@@ -20,6 +20,8 @@ declare module 'libmunit' {
    * - `Continue` means "no verdict yet": an assert that reaches `@maxCalls`
    *   without failing passes.
    * - `Skipped` skips the assert, which neither passes nor fails the suite.
+   *
+   * @category Custom asserts
    */
   export enum State {
     /** The assert failed. */
@@ -38,6 +40,8 @@ declare module 'libmunit' {
   /**
    * The verdict of a whole suite, in {@link finalisedResults}. Per-assert
    * verdicts are {@link State}.
+   *
+   * @category Formatters and configuration
    */
   export enum OverallState {
     /** Every assert passed or was skipped, and the suite had no problems. */
@@ -65,6 +69,8 @@ declare module 'libmunit' {
    *   dsp: { driver: "NonRealTime", sr: 48000, vs: 64 },
    * };
    * ```
+   *
+   * @category Formatters and configuration
    */
   export interface HandlerConfig {
     /** A built-in name (`"Txt"`) or an object implementing {@link LogFormatter}. Default `"Txt"`. */
@@ -129,6 +135,8 @@ declare module 'libmunit' {
    * reported DSP running on them, unchanged for half a second; if that takes
    * longer than 5 seconds plus `settleMs`, no tests run and the suite fails. A
    * change while the suite runs fails it too.
+   *
+   * @category Formatters and configuration
    */
   export interface DspConfig {
     /** The audio driver, named loosely: `"NonRealTime"` and `"non real time"` both work. */
@@ -145,12 +153,16 @@ declare module 'libmunit' {
    * How an assert evaluates: a JavaScript expression over `in1`..`in10`, a
    * custom script, a signal capture against a reference (`[mUnit.assert~]`),
    * or a matrix against a `.jxf` reference.
+   *
+   * @category Formatters and configuration
    */
   export type AssertKind = 'expression' | 'custom' | 'signal' | 'matrix';
 
   /**
    * One assert as registered with the handler: its attributes and what it
    * evaluates. Result formatters get the list of these as their first argument.
+   *
+   * @category Formatters and configuration
    */
   export class assertSettings {
     /** `@maxCalls`: how many calls the assert may take to reach a verdict. Default 1. */
@@ -209,7 +221,11 @@ declare module 'libmunit' {
     maxFraction: number;
   }
 
-  /** One evaluation of an assert: the verdict of that call and the inputs it saw. */
+  /**
+   * One evaluation of an assert: the verdict of that call and the inputs it saw.
+   *
+   * @category Formatters and configuration
+   */
   export interface Run {
     /** The verdict of this call. */
     state: State;
@@ -235,6 +251,8 @@ declare module 'libmunit' {
    * A file kept with a failure. An assert sends `content`; the handler writes
    * it to `<output>/artifacts/<uuid>/<name>` and replaces it with `path`. An
    * assert that writes its own file (a buffer~, a matrix) sends `path` only.
+   *
+   * @category Custom asserts
    */
   export interface Attachment {
     /** The file name, e.g. `inputs.txt` or `actual.wav`. */
@@ -249,6 +267,8 @@ declare module 'libmunit' {
    * A reference file to write when taking references. The handler writes
    * `content`; an assert that writes its own file (a buffer~ as a wav) sends
    * the path only.
+   *
+   * @category Custom asserts
    */
   export interface Recording {
     /** The reference file, as an absolute path. */
@@ -260,6 +280,8 @@ declare module 'libmunit' {
   /**
    * The result of one assert, as the handler collects it and result formatters
    * receive it in {@link finalisedResults.results}.
+   *
+   * @category Formatters and configuration
    */
   export class assertState {
     /** The assert's unique id, matching its {@link assertSettings.uuid}. */
@@ -299,6 +321,8 @@ declare module 'libmunit' {
   /**
    * The results of a whole suite, as result formatters receive them in their
    * second argument.
+   *
+   * @category Formatters and configuration
    */
   export interface finalisedResults {
     /** The suite's verdict. */
@@ -324,6 +348,8 @@ declare module 'libmunit' {
   /**
    * The options a log formatter accepts in {@link LogFormatter.configure}. A
    * marker interface: each formatter defines its own options.
+   *
+   * @category Formatters and configuration
    */
   export interface LogFormatterOptions {
   }
@@ -341,6 +367,8 @@ declare module 'libmunit' {
    *   fileExtension() { return "txt"; },
    * };
    * ```
+   *
+   * @category Formatters and configuration
    */
   export interface LogFormatter {
     /** Called once with the formatter's options, before any rendering. */
@@ -354,6 +382,8 @@ declare module 'libmunit' {
   /**
    * The options a result formatter accepts in {@link ResultFormatter.configure}.
    * A marker interface: each formatter defines its own options.
+   *
+   * @category Formatters and configuration
    */
   export interface ResultFormatterOptions {
   }
@@ -363,6 +393,8 @@ declare module 'libmunit' {
    * {@link HandlerConfig}. The built-in `"Json"` writes `results.json`,
    * `"JUnit"` writes `results.xml` for CI systems and `"Html"` writes a
    * `results.html` overview to open in a browser.
+   *
+   * @category Formatters and configuration
    */
   export interface ResultFormatter {
     /**
@@ -401,6 +433,8 @@ declare module 'libmunit' {
    * }
    * module.exports = assert;
    * ```
+   *
+   * @category Custom asserts
    */
   export type AssertionHandler = (data: unknown[], helpers: ExpressionHelpers) => State | Outcome;
 
@@ -410,6 +444,8 @@ declare module 'libmunit' {
    * `snapshot`, `sameMatrix`) record what they compared, so a failure reports
    * expected and actual values and the differences without more work. The
    * measures (`rms`, `peak`, ...) are the library functions of the same name.
+   *
+   * @category Custom asserts
    */
   export interface ExpressionHelpers {
     /**
@@ -476,6 +512,8 @@ declare module 'libmunit' {
    *   attachments: [{ name: "inputs.txt", content: values.join("\n") }],
    * };
    * ```
+   *
+   * @category Custom asserts
    */
   export interface Outcome {
     /** The verdict of this call. */
@@ -501,6 +539,8 @@ declare module 'libmunit' {
   /**
    * How far two numbers may be apart and still match: the larger of the
    * absolute and the relative allowance wins.
+   *
+   * @category Measures
    */
   export interface Tolerance {
     /** Largest allowed absolute difference. */
@@ -509,7 +549,11 @@ declare module 'libmunit' {
     rel: number;
   }
 
-  /** The tolerance `approx` and {@link approxEqual} use by default: 1e-6 absolute, no relative part. */
+  /**
+   * The tolerance `approx` and {@link approxEqual} use by default: 1e-6 absolute, no relative part.
+   *
+   * @category Measures
+   */
   export const DEFAULT_TOLERANCE: Readonly<Tolerance>;
 
   /**
@@ -519,6 +563,7 @@ declare module 'libmunit' {
    * @param actual the measured value
    * @param expected the value it should have
    * @param tolerance defaults to {@link DEFAULT_TOLERANCE}
+   * @category Measures
    */
   export function approxEqual(actual: number, expected: number, tolerance?: Tolerance): boolean;
 
@@ -531,6 +576,7 @@ declare module 'libmunit' {
    * @param actual the value under test
    * @param expected the value it should equal
    * @param tolerance for the numbers inside; exact by default
+   * @category Measures
    */
   export function diffValues(actual: unknown, expected: unknown, tolerance?: Tolerance): string[];
 
@@ -538,6 +584,8 @@ declare module 'libmunit' {
    * Whether two values are equal, compared as {@link diffValues} does: lists
    * item by item, dicts key by key, numbers within the tolerance (exact by
    * default).
+   *
+   * @category Measures
    */
   export function deepEqual(actual: unknown, expected: unknown, tolerance?: Tolerance): boolean;
 
@@ -545,12 +593,14 @@ declare module 'libmunit' {
    * The root mean square of a list of numbers (a captured signal channel); 0
    * for no samples. A single number counts as a list of one.
    * @throws TypeError when `values` isn't a number or a list of them
+   * @category Measures
    */
   export function rms(values: unknown): number;
 
   /**
    * The largest absolute value in a list of numbers; 0 for no samples.
    * @throws TypeError when `values` isn't a number or a list of them
+   * @category Measures
    */
   export function peak(values: unknown): number;
 
@@ -558,6 +608,7 @@ declare module 'libmunit' {
    * The mean of a list of numbers, i.e. the DC offset of a signal; 0 for no
    * samples. The `dc` helper.
    * @throws TypeError when `values` isn't a number or a list of them
+   * @category Measures
    */
   export function dcOffset(values: unknown): number;
 
@@ -565,6 +616,7 @@ declare module 'libmunit' {
    * The largest absolute difference between two lists of numbers, sample by
    * sample.
    * @throws RangeError when the lists differ in length
+   * @category Measures
    */
   export function maxDiff(actual: unknown, expected: unknown): number;
 
@@ -574,6 +626,7 @@ declare module 'libmunit' {
    * when the reference is silent. The `snr` helper. 60 dB means the difference
    * is about 0.1% of the signal.
    * @throws RangeError when the lists differ in length
+   * @category Measures
    */
   export function snrDb(actual: unknown, reference: unknown): number;
 
@@ -584,10 +637,15 @@ declare module 'libmunit' {
    * @param values the samples
    * @param sampleRate the rate they were captured at, in Hz
    * @throws RangeError when the sample rate is not above 0
+   * @category Measures
    */
   export function frequency(values: unknown, sampleRate: number): number;
 
-  /** How {@link matchSignal} compares a capture with a reference: the `@snr`, `@maxLatency` and `@exact` attributes of a signal assert. */
+  /**
+   * How {@link matchSignal} compares a capture with a reference: the `@snr`, `@maxLatency` and `@exact` attributes of a signal assert.
+   *
+   * @category Measures
+   */
   export interface SignalMatchOptions {
     /** The least signal-to-noise ratio, in dB, that passes. */
     snrDb: number;
@@ -597,7 +655,11 @@ declare module 'libmunit' {
     exact: boolean;
   }
 
-  /** What {@link matchSignal} found. */
+  /**
+   * What {@link matchSignal} found.
+   *
+   * @category Measures
+   */
   export interface SignalMatch {
     /** Whether the capture matches within the options. */
     pass: boolean;
@@ -616,13 +678,23 @@ declare module 'libmunit' {
    * (by cross-correlation, within `maxLatency` samples) when the options allow.
    * Channels of different lengths compare over their overlap. This is what a
    * signal assert with `@reference` does per channel.
+   *
+   * @category Measures
    */
   export function matchSignal(actual: unknown, reference: unknown, options: SignalMatchOptions): SignalMatch;
 
-  /** The cell types of a Jitter matrix this library can hold. */
+  /**
+   * The cell types of a Jitter matrix this library can hold.
+   *
+   * @category Matrices
+   */
   export type MatrixType = 'char' | 'long' | 'float32' | 'float64';
 
-  /** The shape of a matrix: its dimensions, plane count and cell type. */
+  /**
+   * The shape of a matrix: its dimensions, plane count and cell type.
+   *
+   * @category Matrices
+   */
   export interface MatrixShape {
     /** The dimensions, e.g. `[320, 240]`. */
     dim: number[];
@@ -637,19 +709,33 @@ declare module 'libmunit' {
    * in expressions, custom asserts and the matrix helpers. Cells are stored as
    * Jitter does, planes interleaved and the first dimension fastest:
    * `data[((y * width + x) * planes) + plane]` for a 2D matrix.
+   *
+   * @category Matrices
    */
   export interface MatrixData extends MatrixShape {
     /** Every value, `dim[0] * dim[1] * ... * planes` of them. */
     data: ArrayLike<number>;
   }
 
-  /** Whether a value is a {@link MatrixData}: a matrix from a data inlet or a reference file. */
+  /**
+   * Whether a value is a {@link MatrixData}: a matrix from a data inlet or a reference file.
+   *
+   * @category Matrices
+   */
   export function isMatrix(value: unknown): value is MatrixData;
 
-  /** A matrix's shape without its cells, for messages and results. */
+  /**
+   * A matrix's shape without its cells, for messages and results.
+   *
+   * @category Matrices
+   */
   export function describeMatrix(m: MatrixData): MatrixShape;
 
-  /** The statistics of one plane of a matrix, from {@link planeStats}. */
+  /**
+   * The statistics of one plane of a matrix, from {@link planeStats}.
+   *
+   * @category Matrices
+   */
   export interface PlaneStats {
     /** The smallest value in the plane. */
     min: number;
@@ -666,6 +752,7 @@ declare module 'libmunit' {
    * @param plane the plane, numbered from 0
    * @throws TypeError when `value` isn't a matrix
    * @throws RangeError when the matrix has no such plane
+   * @category Matrices
    */
   export function planeStats(value: unknown, plane?: number): PlaneStats;
 
@@ -678,10 +765,15 @@ declare module 'libmunit' {
    * @param plane one plane, numbered from 0
    * @throws TypeError when `value` isn't a matrix
    * @throws RangeError when the cell is outside the matrix, or the matrix has no such plane
+   * @category Matrices
    */
   export function matrixCell(value: unknown, x: number, y?: number, plane?: number): number | number[];
 
-  /** How {@link matchMatrix} compares two matrices: the `@maxDiff` and `@maxFraction` attributes of a matrix assert. */
+  /**
+   * How {@link matchMatrix} compares two matrices: the `@maxDiff` and `@maxFraction` attributes of a matrix assert.
+   *
+   * @category Matrices
+   */
   export interface MatrixMatchOptions {
     /** The largest difference a cell may have, in the matrix's units (0-255 for char). */
     maxDiff: number;
@@ -689,7 +781,11 @@ declare module 'libmunit' {
     maxFraction: number;
   }
 
-  /** What {@link matchMatrix} found. */
+  /**
+   * What {@link matchMatrix} found.
+   *
+   * @category Matrices
+   */
   export interface MatrixMatch {
     /** Whether the matrices match within the options. */
     pass: boolean;
@@ -710,6 +806,8 @@ declare module 'libmunit' {
    * of pixels differ by more than 2/255" (`maxDiff` 2, `maxFraction` 0.001). A
    * cell counts as differing once, however many of its planes are over. This is
    * what a matrix assert with `@reference` does, and the `sameMatrix` helper.
+   *
+   * @category Matrices
    */
   export function matchMatrix(actual: MatrixData, expected: MatrixData, options: MatrixMatchOptions): MatrixMatch;
 }

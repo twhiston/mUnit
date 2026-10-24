@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/twhiston/mUnit/misc/glossary.schema.json",
+  "title": "mUnit glossary",
+  "description": "The terms shown by Extras > mUnit > mUnit Glossary and rendered into the Glossary section of README.md. The patch reads this file with [dict] when it opens; the README is rendered from it by the build (pnpm run glossary), which also checks that every term points at a help patcher, example, manual heading and term that exists.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["categories"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "categories": {
+      "description": "Shown in this order, as the entries of the category menu and the sub-headings of the README section.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "terms"],
+        "properties": {
+          "name": {
+            "description": "The category, as shown.",
+            "type": "string",
+            "minLength": 1
+          },
+          "terms": {
+            "description": "Shown in this order. Put the general idea before the mUnit detail.",
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/term" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "term": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["term", "definition", "also", "see"],
+      "properties": {
+        "term": {
+          "description": "The word or phrase, unique across every category. Other terms name it in their \"also\" lists exactly as written here.",
+          "type": "string",
+          "minLength": 1
+        },
+        "definition": {
+          "description": "One to three sentences of plain prose: what the idea is, then how mUnit does it. Write object names in brackets, [mUnit.assert]; the README renders them as code. No double quotes, which Max would strip.",
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\"]*$"
+        },
+        "also": {
+          "description": "Related terms, each the exact \"term\" of another entry. May be empty.",
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "see": {
+          "description": "Where to go next: the Go to buttons in Max and the See links in the README, in this order. At least one.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["label", "action"],
+            "properties": {
+              "label": {
+                "description": "The button text in Max. The README renders the target itself, except for a url, which uses this label.",
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "description": "What the button does, a verb and a target: \"help <object>\" opens a help patcher (an object with a docs/<object>.maxref.xml); \"load <patch>\" opens an example (examples/<patch>/<patch>.maxpat) or an Extras patch by name; \"readme <slug>\" opens that heading of README.md on GitHub, the slug being the heading in lower case with punctuation removed and spaces as hyphens, as GitHub makes its anchors; \"url <https://...>\" opens a web page.",
+                "type": "string",
+                "pattern": "^(help|load|readme|url) \\S.*$"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -8,8 +8,12 @@
 	</digest>
 
 	<description>
-		<o>mUnit.loadbang</o> bangs once, when <o>mUnit.handler</o> has started and been configured. A plain <o>loadbang</o> is too early: the <o>node.script</o> and <o>v8</o> objects behind the framework are still starting, so an assert fed by it would miss its input. It works whether its patch loads before or after that moment, which makes it the right starting point in test patches opened by <o>mUnit.harness</o>. Each instance fires once, until it gets <m>reset</m>. The moment it fires is also when an assert's <at>timeout</at> starts counting and when <o>mUnit.stimulus~</o> and <o>mUnit.assert~</o> with <at>trigger</at> auto start. It fires at low priority (through <o>defer</o>) whether Overdrive is on or off, so a test starts the same way on every machine: started at high priority, a capture's <o>buffer~</o> would be resized after recording had begun and start with silence.
+		<o>mUnit.loadbang</o> bangs once, when <o>mUnit.handler</o> has started and been configured. A plain <o>loadbang</o> is too early: the <o>node.script</o> and <o>v8</o> objects behind the framework are still starting, so an assert fed by it would miss its input. It works whether its patch loads before or after that moment, which makes it the right starting point in test patches opened by <o>mUnit.harness</o>.
 	</description>
+
+	<discussion>
+		Each instance fires once, until it gets <m>reset</m>, after which it fires again at once if the handler is ready; <m>bang</m> fires it by hand. The moment it fires is also when an assert's <at>timeout</at> starts counting and when <o>mUnit.stimulus~</o> and <o>mUnit.assert~</o> with <at>trigger</at> auto start. It fires at low priority (through <o>defer</o>) whether Overdrive is on or off, so a test starts the same way on every machine: started at high priority, a capture's <o>buffer~</o> would be resized after recording had begun and start with silence.
+	</discussion>
 
 	<!--METADATA-->
 	<metadatalist>

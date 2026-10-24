@@ -3,7 +3,7 @@
 		"fileversion": 1,
 		"appversion": {
 			"major": 9,
-			"minor": 1,
+			"minor": 2,
 			"revision": 0,
 			"architecture": "x64",
 			"modernui": 1
@@ -12,8 +12,8 @@
 		"rect": [
 			80,
 			80,
-			420,
-			160
+			520,
+			200
 		],
 		"bglocked": 0,
 		"openinpresentation": 0,
@@ -28,18 +28,74 @@
 		"boxes": [
 			{
 				"box": {
-					"id": "obj-1",
+					"id": "hdr-panel",
+					"maxclass": "panel",
+					"numinlets": 1,
+					"numoutlets": 0,
+					"patching_rect": [
+						0,
+						0,
+						520,
+						64
+					],
+					"angle": 0,
+					"mode": 0,
+					"proportion": 0.39,
+					"shadow": -1,
+					"background": 1,
+					"bgcolor": [
+						0.16,
+						0.17,
+						0.2,
+						1
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "hdr-title",
 					"maxclass": "comment",
 					"numinlets": 1,
 					"numoutlets": 0,
 					"patching_rect": [
 						20,
-						10,
-						380,
-						44
+						11,
+						480,
+						29
 					],
-					"linecount": 2,
-					"text": "helper.maxpat: not a test. The harness's @pattern test_*.maxpat leaves it out, so its assert never registers."
+					"text": "tests/helper.maxpat: not a test",
+					"fontface": 1,
+					"fontsize": 20,
+					"textcolor": [
+						0.97,
+						0.97,
+						0.97,
+						1
+					],
+					"linecount": 1
+				}
+			},
+			{
+				"box": {
+					"id": "hdr-sub",
+					"maxclass": "comment",
+					"numinlets": 1,
+					"numoutlets": 0,
+					"patching_rect": [
+						20,
+						41,
+						480,
+						20
+					],
+					"text": "Left out by the pattern test_*.maxpat, so its assert never registers",
+					"fontsize": 12,
+					"textcolor": [
+						0.75,
+						0.77,
+						0.82,
+						1
+					],
+					"linecount": 1
 				}
 			},
 			{
@@ -51,7 +107,7 @@
 					"outlettype": [],
 					"patching_rect": [
 						20,
-						80,
+						96,
 						292,
 						22
 					],

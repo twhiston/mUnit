@@ -8,8 +8,12 @@
 	</digest>
 
 	<description>
-		<o>mUnit.stimulus~</o> makes a test signal that is the same on every run: a sine, an impulse, a linear sweep, seeded white noise, silence, or a sound file played once. It starts when the suite starts (<at>trigger</at> auto, the default) or on a <m>bang</m> (<at>trigger</at> manual), at the same moment as an <o>mUnit.assert~</o> capture, and <m>stop</m> stops it. Everything but the file is computed sample by sample from a counter in <o>gen~</o>, so two runs give the same samples whatever the vector size. Put the unit under test between it and <o>mUnit.assert~</o>.
+		<o>mUnit.stimulus~</o> makes a test signal that is the same on every run: a sine, an impulse, a linear sweep, seeded white noise, silence, or a sound file played once. It starts when the suite starts (<at>trigger</at> auto, the default) or on a <m>bang</m> (<at>trigger</at> manual), at the same moment as an <o>mUnit.assert~</o> capture, and <m>stop</m> stops it.
 	</description>
+
+	<discussion>
+		Everything but the file is computed sample by sample from a counter in <o>gen~</o>, so two runs give the same samples whatever the vector size. Put the unit under test between it and <o>mUnit.assert~</o>.
+	</discussion>
 
 	<!--METADATA-->
 	<metadatalist>

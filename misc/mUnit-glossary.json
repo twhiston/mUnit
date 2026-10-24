@@ -1,0 +1,1241 @@
+{
+	"$schema": "./glossary.schema.json",
+	"categories": [
+		{
+			"name": "Testing basics",
+			"terms": [
+				{
+					"term": "test",
+					"definition": "A patch, or part of one, that feeds known inputs into the thing you are testing and checks what comes out. The check is an assert; a test passes when its assert passes. Tests are kept so they can be run again after every change, which is what makes them worth writing.",
+					"also": [
+						"assert",
+						"suite",
+						"unit under test"
+					],
+					"see": [
+						{
+							"label": "Quick start",
+							"action": "readme quick-start"
+						},
+						{
+							"label": "simpleConfigExample",
+							"action": "load simpleConfigExample"
+						}
+					]
+				},
+				{
+					"term": "assert",
+					"definition": "A statement that something must be true at this point, such as the output equals 1. In mUnit an assert is an [mUnit.assert] box: it evaluates a JavaScript expression over the values that arrive at its inlets and reports pass, fail or skipped. Assertion means the same thing.",
+					"also": [
+						"expression",
+						"verdict",
+						"test"
+					],
+					"see": [
+						{
+							"label": "mUnit.assert help",
+							"action": "help mUnit.assert"
+						},
+						{
+							"label": "Assert, in the manual",
+							"action": "readme assert"
+						}
+					]
+				},
+				{
+					"term": "unit under test",
+					"definition": "The piece of your patch a test exercises: an abstraction, a chain of objects, a gen~ patch, a shader. A test isolates it by feeding it inputs directly, instead of through whatever it normally gets them from, so the result depends only on the unit.",
+					"also": [
+						"test",
+						"stimulus",
+						"fixture"
+					],
+					"see": [
+						{
+							"label": "Tables of cases",
+							"action": "readme tables-of-cases"
+						}
+					]
+				},
+				{
+					"term": "expression",
+					"definition": "The JavaScript written in an [mUnit.assert] box. in1 to in10 stand for the inputs, so in2 > in1 or approx(in1, 0.5, 0.001) are expressions. It passes when it returns exactly true; any other result, or an error, fails that assertion.",
+					"also": [
+						"assert",
+						"inputs: in1 to in10",
+						"helper"
+					],
+					"see": [
+						{
+							"label": "Assert, in the manual",
+							"action": "readme assert"
+						},
+						{
+							"label": "expectedActualExample",
+							"action": "load expectedActualExample"
+						}
+					]
+				},
+				{
+					"term": "expected versus actual",
+					"definition": "The value you wanted (expected) and the value the patch produced (actual). A good failure message reports both, for lists and dicts it lists the differences between them, and captures those values as part of the result report, so you can see what went wrong without adding prints.",
+					"also": [
+						"assert",
+						"verdict"
+					],
+					"see": [
+						{
+							"label": "Expected versus actual",
+							"action": "readme expected-versus-actual"
+						},
+						{
+							"label": "expectedActualExample",
+							"action": "load expectedActualExample"
+						}
+					]
+				},
+				{
+					"term": "verdict",
+					"definition": "The outcome of an assert: pass, fail or skipped. The verdicts of every assert in a suite add up to the verdict of the run: Passed when nothing failed, Failed otherwise. Skipped asserts count for neither.",
+					"also": [
+						"assert",
+						"suite",
+						"skip and only"
+					],
+					"see": [
+						{
+							"label": "Custom asserts",
+							"action": "readme custom-asserts"
+						}
+					]
+				},
+				{
+					"term": "suite",
+					"definition": "A set of tests run together and reported as one result. In mUnit every assert that registers with an [mUnit.handler] belongs to the run, and @suite groups them under a name, by default the suite is the name of the patch they are in. A folder of test patches opened by [mUnit.harness] is the usual shape of a suite.",
+					"also": [
+						"handler",
+						"harness",
+						"test wrangler"
+					],
+					"see": [
+						{
+							"label": "mUnit.handler help",
+							"action": "help mUnit.handler"
+						},
+						{
+							"label": "mUnit.handler, in the manual",
+							"action": "readme munithandler"
+						}
+					]
+				},
+				{
+					"term": "fixture",
+					"definition": "Anything a test needs in place before it can run: a dict of settings, a sound file, a reference matrix, a known input signal. Fixtures live next to the test (the references folder, a stimulus in the patch) rather than being made up at run time, so the test sees the same thing every time.",
+					"also": [
+						"reference",
+						"stimulus"
+					],
+					"see": [
+						{
+							"label": "Dicts and snapshots",
+							"action": "readme dicts-and-snapshots"
+						}
+					]
+				},
+				{
+					"term": "repeatable",
+					"definition": "A test is repeatable, or deterministic, when it gives the same verdict every time it runs. Random values, live audio, timing and shared state make a test unrepeatable. mUnit gives you [mUnit.stimulus~] for signals that are the same every run, the non-realtime driver, and sequential mode for patches that may interfere with each other.",
+					"also": [
+						"flaky test",
+						"stimulus",
+						"non-realtime driver"
+					],
+					"see": [
+						{
+							"label": "mUnit.stimulus~ help",
+							"action": "help mUnit.stimulus~"
+						}
+					]
+				},
+				{
+					"term": "flaky test",
+					"definition": "A test that passes on some runs and fails on others although nothing changed. Common causes in Max are scheduler timing, two test patches sharing a send or receive name, audio hardware, and a loadbang firing before mUnit is ready. Fix the cause rather than retrying: not fixing a flaky test teaches you to ignore failures, which is bad practice.",
+					"also": [
+						"repeatable",
+						"timeout",
+						"sequential mode"
+					],
+					"see": [
+						{
+							"label": "mUnit.loadbang, in the manual",
+							"action": "readme munitloadbang"
+						},
+						{
+							"label": "sequentialHarnessExample",
+							"action": "load sequentialHarnessExample"
+						}
+					]
+				},
+				{
+					"term": "timeout",
+					"definition": "A limit on how long something may take before it counts as failed, so a run always ends. @timeout on an assert fails it when no verdict arrives within that time; suiteTimeout in the config ends the whole suite, reporting every unfinished assert as failed. A timeout is always a failure, not a pass.",
+					"also": [
+						"settle",
+						"verdict"
+					],
+					"see": [
+						{
+							"label": "Attrs",
+							"action": "readme attrs"
+						},
+						{
+							"label": "mUnit.handler, in the manual",
+							"action": "readme munithandler"
+						}
+					]
+				},
+				{
+					"term": "skip and only",
+					"definition": "@skip 1 reports an assert as skipped without evaluating it, for a feature that is not finished or a machine that cannot run it. @only 1 runs just the asserts marked with it and skips the rest, handy while debugging one test. forbidOnly in the config fails the suite when an @only is left in, so it cannot reach CI by mistake.",
+					"also": [
+						"verdict",
+						"CI"
+					],
+					"see": [
+						{
+							"label": "skipAndOnlyExample",
+							"action": "load skipAndOnlyExample"
+						},
+						{
+							"label": "Attrs",
+							"action": "readme attrs"
+						}
+					]
+				},
+				{
+					"term": "test start",
+					"definition": "The moment a test may begin sending inputs. In mUnit that is not when the patch loads but when the handler is ready, because the node process behind it takes a moment to start. [mUnit.loadbang] bangs at that moment, whether the patch opened before or after it, and replaces [loadbang] in test patches.",
+					"also": [
+						"handler",
+						"flaky test",
+						"teardown"
+					],
+					"see": [
+						{
+							"label": "mUnit.loadbang help",
+							"action": "help mUnit.loadbang"
+						},
+						{
+							"label": "mUnit.loadbang, in the manual",
+							"action": "readme munitloadbang"
+						}
+					]
+				},
+				{
+					"term": "teardown",
+					"definition": "Cleaning up after a test: stopping DSP or a metro, closing a file, setting a global back. [mUnit.teardown] bangs once the results of its patch are final, so the cleanup cannot change a verdict, and the handler waits for every teardown before it goes on.",
+					"also": [
+						"test start",
+						"suite"
+					],
+					"see": [
+						{
+							"label": "mUnit.teardown help",
+							"action": "help mUnit.teardown"
+						},
+						{
+							"label": "teardownExample",
+							"action": "load teardownExample"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Asserts in depth",
+			"terms": [
+				{
+					"term": "helper",
+					"definition": "A function you can call inside an expression: approx and equals compare with details, snapshot compares with a reference file, and rms, peak, dc, maxDiff, snr and freq measure a list or a signal. When a helper fails, its expected value, actual value and differences become the failure message. See the expressions helper category for info about what helpers are available.",
+					"also": [
+						"expression",
+						"approx()",
+						"equals()",
+						"snapshot()",
+						"measure"
+					],
+					"see": [
+						{
+							"label": "Helpers",
+							"action": "readme helpers"
+						},
+						{
+							"label": "expectedActualExample",
+							"action": "load expectedActualExample"
+						}
+					]
+				},
+				{
+					"term": "tolerance",
+					"definition": "How far a result may be from what you expect and still pass. Floats are rarely exactly equal, so approx takes an absolute and a relative tolerance; a signal passes above an @snr in dB; a matrix passes when at most @maxFraction of its cells differ by more than @maxDiff. @tolerance on an assert is different: how many failed calls a custom or @every assert may have.",
+					"also": [
+						"helper",
+						"approx()",
+						"measure"
+					],
+					"see": [
+						{
+							"label": "Helpers",
+							"action": "readme helpers"
+						},
+						{
+							"label": "Matrices",
+							"action": "readme matrices-jitter-in-munitassert"
+						}
+					]
+				},
+				{
+					"term": "table of cases",
+					"definition": "Several inputs with their expected outputs, checked by one assert. Each row is a case; @every 1 makes the assert demand that every call is true, and @maxCalls says how many rows to expect. It fails on the first wrong row and names it.",
+					"also": [
+						"assert",
+						"expression"
+					],
+					"see": [
+						{
+							"label": "Tables of cases",
+							"action": "readme tables-of-cases"
+						},
+						{
+							"label": "tableOfCasesExample",
+							"action": "load tableOfCasesExample"
+						}
+					]
+				},
+				{
+					"term": "snapshot",
+					"definition": "A copy of a value, saved in a file the first time, that later runs are compared against. snapshot(in1) in an expression compares the input with references/<name>.json next to the test patch and fails when they differ. Snapshots catch changes you did not mean to make, in a dict of settings or a long list, without writing out every expected value.",
+					"also": [
+						"reference",
+						"taking references",
+						"snapshot()"
+					],
+					"see": [
+						{
+							"label": "Dicts and snapshots",
+							"action": "readme dicts-and-snapshots"
+						},
+						{
+							"label": "snapshotExample",
+							"action": "load snapshotExample"
+						}
+					]
+				},
+				{
+					"term": "reference",
+					"definition": "The file a snapshot, matrix or signal assert compares against: a .json, .jxf or .wav in the references folder next to the test patch. A reference is the recorded right answer; commit it with the tests, and when it changes, make sure the change was intended.",
+					"also": [
+						"snapshot",
+						"taking references",
+						"fixture"
+					],
+					"see": [
+						{
+							"label": "Dicts and snapshots",
+							"action": "readme dicts-and-snapshots"
+						},
+						{
+							"label": "Signals",
+							"action": "readme signals-munitassert-and-munitstimulus"
+						}
+					]
+				},
+				{
+					"term": "taking references",
+					"definition": "Writing what the patch produces now as the reference. munit run --take-references, or takeReferences in the config, or inside the patch manually with `takeReference 1` to the handler. Every assert with a reference then passes and writes its file. Look at the diff before you commit: a wrong reference makes a wrong patch pass.",
+					"also": [
+						"reference",
+						"snapshot"
+					],
+					"see": [
+						{
+							"label": "Dicts and snapshots",
+							"action": "readme dicts-and-snapshots"
+						},
+						{
+							"label": "Running a suite",
+							"action": "readme running-a-suite"
+						}
+					]
+				},
+				{
+					"term": "custom assert",
+					"definition": "A JavaScript file named in the assert box instead of an expression. It receives the inputs as an array and returns a State: Success or Fail decide at once, Continue means no verdict yet, Skipped skips. Use one when a simple expression cannot say it, such as every input so far is unique.",
+					"also": [
+						"expression",
+						"verdict"
+					],
+					"see": [
+						{
+							"label": "Custom asserts",
+							"action": "readme custom-asserts"
+						},
+						{
+							"label": "customAssert",
+							"action": "load customAssert"
+						}
+					]
+				},
+				{
+					"term": "failure files",
+					"definition": "Files an assert keeps when it fails, so you can look at what it saw: the actual dict of a snapshot, a captured signal as actual.wav, a matrix as actual.png next to a diff.png. They are written under artifacts in the output folder and linked from the JSON and JUnit results, which CI systems show on the failed test.",
+					"also": [
+						"output folder",
+						"JUnit"
+					],
+					"see": [
+						{
+							"label": "Failure files",
+							"action": "readme failure-files"
+						},
+						{
+							"label": "failureFilesExample",
+							"action": "load failureFilesExample"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Expression helpers",
+			"terms": [
+				{
+					"term": "inputs: in1 to in10",
+					"definition": "What an expression sees: in1 is the value at the second inlet, in2 the third, and so on, up to in10. Ints, floats, symbols, lists and dicts arrive as JavaScript values, so in1 === 'foo', in1.length === 3 and in1.name === 'munit' all work. In [mUnit.assert~] each input is a channel of the capture, a list of samples; a matrix arrives with dim, planes, type and its cells.",
+					"also": [
+						"expression",
+						"capture",
+						"matrix input"
+					],
+					"see": [
+						{
+							"label": "Assert, in the manual",
+							"action": "readme assert"
+						},
+						{
+							"label": "expectedActualExample",
+							"action": "load expectedActualExample"
+						}
+					]
+				},
+				{
+					"term": "approx()",
+					"definition": "approx(actual, expected, abs, rel). True when the two values match within a tolerance: numbers, lists item by item, dicts key by key. The tolerance is the larger of abs (default 0.000001) and rel times the expected value (default 0), so approx(in1, 0.5, 0.001) allows a thousandth either way. On failure the differences are reported, one per line.",
+					"also": [
+						"tolerance",
+						"equals()",
+						"expected versus actual"
+					],
+					"see": [
+						{
+							"label": "Helpers",
+							"action": "readme helpers"
+						},
+						{
+							"label": "expectedActualExample",
+							"action": "load expectedActualExample"
+						}
+					]
+				},
+				{
+					"term": "equals()",
+					"definition": "equals(actual, expected). True when the two values are exactly equal: lists item by item, dicts key by key in any order, symbols as strings. Use it instead of === for lists and dicts, which JavaScript compares by identity, and to get the differences reported when it fails.",
+					"also": [
+						"approx()",
+						"expected versus actual"
+					],
+					"see": [
+						{
+							"label": "Helpers",
+							"action": "readme helpers"
+						},
+						{
+							"label": "expectedActualExample",
+							"action": "load expectedActualExample"
+						}
+					]
+				},
+				{
+					"term": "snapshot()",
+					"definition": "snapshot(actual, name). True when the value matches the reference file references/<name>.json next to the test patch. The name defaults to the assert's @name, so give the assert one, or pass a name, which may include a folder: snapshot(in1, 'presets/default'). With no reference yet it fails and says how to take one.",
+					"also": [
+						"snapshot",
+						"reference",
+						"taking references"
+					],
+					"see": [
+						{
+							"label": "Dicts and snapshots",
+							"action": "readme dicts-and-snapshots"
+						},
+						{
+							"label": "snapshotExample",
+							"action": "load snapshotExample"
+						}
+					]
+				},
+				{
+					"term": "rms()",
+					"definition": "rms(values). The root mean square of a list of numbers, the usual measure of how loud a signal is: 0 for silence, about 0.707 for a full-scale sine. rms(in1) > 0 is the default expression of [mUnit.assert~]. A single number counts as a list of one.",
+					"also": [
+						"measure",
+						"peak()",
+						"capture"
+					],
+					"see": [
+						{
+							"label": "Helpers",
+							"action": "readme helpers"
+						},
+						{
+							"label": "signalExample",
+							"action": "load signalExample"
+						}
+					]
+				},
+				{
+					"term": "peak()",
+					"definition": "peak(values). The largest absolute value in a list of numbers: the loudest sample of a capture, or the largest magnitude in any list. peak(in1) <= 1 checks that a signal never clips.",
+					"also": [
+						"measure",
+						"rms()"
+					],
+					"see": [
+						{
+							"label": "Helpers",
+							"action": "readme helpers"
+						},
+						{
+							"label": "signalExample",
+							"action": "load signalExample"
+						}
+					]
+				},
+				{
+					"term": "dc()",
+					"definition": "dc(values). The mean of a list of numbers, which for a signal is its DC offset. A filter or oscillator that should be centred on zero passes approx(dc(in1), 0, 0.01).",
+					"also": [
+						"measure",
+						"rms()"
+					],
+					"see": [
+						{
+							"label": "Helpers",
+							"action": "readme helpers"
+						},
+						{
+							"label": "signalExample",
+							"action": "load signalExample"
+						}
+					]
+				},
+				{
+					"term": "maxDiff()",
+					"definition": "maxDiff(actual, expected). The largest absolute difference between two lists, compared item by item: how far apart two signals or two lists of numbers ever get. maxDiff(in1, in2) < 0.001 says two channels agree sample for sample.",
+					"also": [
+						"measure",
+						"snr()"
+					],
+					"see": [
+						{
+							"label": "Helpers",
+							"action": "readme helpers"
+						},
+						{
+							"label": "signalExample",
+							"action": "load signalExample"
+						}
+					]
+				},
+				{
+					"term": "snr()",
+					"definition": "snr(actual, reference). The signal-to-noise ratio of one list against another, in decibels, treating the difference as noise. 60 dB means the two differ by about 0.1 percent; identical lists give infinity. It is what @reference on [mUnit.assert~] uses, and it works on any two lists of the same length.",
+					"also": [
+						"SNR",
+						"measure",
+						"maxDiff()"
+					],
+					"see": [
+						{
+							"label": "Helpers",
+							"action": "readme helpers"
+						},
+						{
+							"label": "Signals",
+							"action": "readme signals-munitassert-and-munitstimulus"
+						}
+					]
+				},
+				{
+					"term": "freq()",
+					"definition": "freq(values). The frequency of a captured channel in Hz, found from its zero crossings, precise to a fraction of a Hz even for a short capture. Only in [mUnit.assert~], where the sample rate is known; anywhere else it throws. approx(freq(in1), 440, 1) checks an oscillator.",
+					"also": [
+						"measure",
+						"capture"
+					],
+					"see": [
+						{
+							"label": "Signals",
+							"action": "readme signals-munitassert-and-munitstimulus"
+						},
+						{
+							"label": "signalExample",
+							"action": "load signalExample"
+						}
+					]
+				},
+				{
+					"term": "planeMin(), planeMean(), planeMax()",
+					"definition": "planeMin, planeMean, planeMax(matrix, plane). The smallest, the mean and the largest value in one plane of a matrix, plane 0 by default. For char matrices the values run from 0 to 255. approx(planeMean(in1, 0), 0.5, 0.02) checks that a float matrix sits around a half.",
+					"also": [
+						"matrix input",
+						"cell()",
+						"measure"
+					],
+					"see": [
+						{
+							"label": "Matrices",
+							"action": "readme matrices-jitter-in-munitassert"
+						},
+						{
+							"label": "jitterExample",
+							"action": "load jitterExample"
+						}
+					]
+				},
+				{
+					"term": "cell()",
+					"definition": "cell(matrix, x, y, plane). One cell of a matrix: all its planes as a list, or one plane's value when plane is given. y may be left out for a one-dimensional matrix. cell(in1, 0, 0) === 255 looks at the top left pixel.",
+					"also": [
+						"matrix input",
+						"planeMin(), planeMean(), planeMax()"
+					],
+					"see": [
+						{
+							"label": "Matrices",
+							"action": "readme matrices-jitter-in-munitassert"
+						},
+						{
+							"label": "jitterExample",
+							"action": "load jitterExample"
+						}
+					]
+				},
+				{
+					"term": "sameMatrix()",
+					"definition": "sameMatrix(actual, expected, maxDiff, maxFraction). True when two matrices have the same shape and their cells match within the perceptual tolerance: at most maxFraction of the cells may differ by more than maxDiff, both 0 by default, meaning identical. A failure reports both shapes and how many cells differed. @reference does the same against a .jxf file.",
+					"also": [
+						"matrix reference",
+						"tolerance",
+						"matrix input"
+					],
+					"see": [
+						{
+							"label": "Matrices",
+							"action": "readme matrices-jitter-in-munitassert"
+						},
+						{
+							"label": "jitterExample",
+							"action": "load jitterExample"
+						}
+					]
+				},
+				{
+					"term": "matrix input",
+					"definition": "How a jit_matrix arrives at an expression: a value with dim (the size per dimension, as a list), planes, type (char, long, float32 or float64) and every cell, so in1.dim[0] == 64 && in1.planes == 4 checks the shape, and the matrix helpers read the cells. In the results a matrix appears as its shape and cell count.",
+					"also": [
+						"inputs: in1 to in10",
+						"readback",
+						"matrix reference"
+					],
+					"see": [
+						{
+							"label": "Matrices",
+							"action": "readme matrices-jitter-in-munitassert"
+						},
+						{
+							"label": "jitterExample",
+							"action": "load jitterExample"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Signals and Jitter",
+			"terms": [
+				{
+					"term": "stimulus",
+					"definition": "A known input you feed into the unit under test. [mUnit.stimulus~] makes test signals that are the same sample for sample on every run: a sine, an impulse, a sweep, seeded noise, silence or a sound file.",
+					"also": [
+						"unit under test",
+						"repeatable",
+						"capture"
+					],
+					"see": [
+						{
+							"label": "mUnit.stimulus~ help",
+							"action": "help mUnit.stimulus~"
+						},
+						{
+							"label": "signalExample",
+							"action": "load signalExample"
+						}
+					]
+				},
+				{
+					"term": "capture",
+					"definition": "The recording [mUnit.assert~] makes of its signal inlets, for @duration milliseconds from the test start or from a bang. The expression then sees each channel as a list of samples, so the helpers and measures work on it like on any list. A failing signal assert keeps its capture as actual.wav.",
+					"also": [
+						"stimulus",
+						"measure",
+						"failure files"
+					],
+					"see": [
+						{
+							"label": "mUnit.assert~ help",
+							"action": "help mUnit.assert~"
+						},
+						{
+							"label": "Signals",
+							"action": "readme signals-munitassert-and-munitstimulus"
+						}
+					]
+				},
+				{
+					"term": "measure",
+					"definition": "One number that summarises a signal or a list so an expression can compare it: rms, peak, dc (the mean), freq (the frequency from the zero crossings), maxDiff and snr against another list. Testing a measure is more robust than testing samples one by one.",
+					"also": [
+						"helper",
+						"rms()",
+						"peak()",
+						"freq()",
+						"tolerance"
+					],
+					"see": [
+						{
+							"label": "Helpers",
+							"action": "readme helpers"
+						},
+						{
+							"label": "signalExample",
+							"action": "load signalExample"
+						}
+					]
+				},
+				{
+					"term": "SNR",
+					"definition": "Signal-to-noise ratio, in decibels: how close a capture is to its reference, treating the difference as noise. A signal assert with @reference passes when the SNR is at least @snr, 60 dB by default, which is a difference of about 0.1 percent. @exact 1 demands identical samples instead.",
+					"also": [
+						"reference",
+						"tolerance",
+						"latency",
+						"snr()"
+					],
+					"see": [
+						{
+							"label": "Signals",
+							"action": "readme signals-munitassert-and-munitstimulus"
+						}
+					]
+				},
+				{
+					"term": "latency",
+					"definition": "A lead or lag, in samples, between a capture and its reference, for example from a delay inside the unit under test. @maxLatency lets the comparison slide the two by up to that many samples; the alignment found is reported as latency in the result.",
+					"also": [
+						"SNR",
+						"reference"
+					],
+					"see": [
+						{
+							"label": "Signals",
+							"action": "readme signals-munitassert-and-munitstimulus"
+						}
+					]
+				},
+				{
+					"term": "non-realtime driver",
+					"definition": "Max's NonRealTime audio driver renders audio as fast as the machine can, needs no audio hardware, and produces the same samples on every run, which is what a test and a CI machine want. The dsp key in the config switches a suite to it, with a sample rate and vector size, and restores your settings afterwards.",
+					"also": [
+						"repeatable",
+						"CI"
+					],
+					"see": [
+						{
+							"label": "DSP for a suite",
+							"action": "readme dsp-for-a-suite"
+						},
+						{
+							"label": "signalExample",
+							"action": "load signalExample"
+						}
+					]
+				},
+				{
+					"term": "matrix reference",
+					"definition": "A Jitter matrix saved as a .jxf file that a matrix assert compares against with @reference. GPUs and drivers differ in the last bit, so the comparison takes a perceptual tolerance: @maxDiff 2 @maxFraction 0.001 means at most 0.1 percent of the cells may differ by more than 2 out of 255.",
+					"also": [
+						"reference",
+						"tolerance",
+						"readback"
+					],
+					"see": [
+						{
+							"label": "Matrices",
+							"action": "readme matrices-jitter-in-munitassert"
+						},
+						{
+							"label": "jitterExample",
+							"action": "load jitterExample"
+						}
+					]
+				},
+				{
+					"term": "readback",
+					"definition": "Getting what the GPU drew back into a Jitter matrix so an assert can look at it: a jit.gl.pix or jit.gl.texture sent to jit.matrix, or jit.gl.asyncread after a render. It needs a visible destination, such as a named jit.pwindow in the test patch, and a display on the machine that runs the test.",
+					"also": [
+						"matrix reference"
+					],
+					"see": [
+						{
+							"label": "Matrices",
+							"action": "readme matrices-jitter-in-munitassert"
+						},
+						{
+							"label": "jitterExample",
+							"action": "load jitterExample"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Running suites",
+			"terms": [
+				{
+					"term": "handler",
+					"definition": "[mUnit.handler], the object that runs a suite: every assert registers with it, it collects their verdicts, decides when the run is finished, writes the results and the log, and applies the configuration. One handler per run; a second one would collect everything twice.",
+					"also": [
+						"suite",
+						"harness",
+						"settle"
+					],
+					"see": [
+						{
+							"label": "mUnit.handler help",
+							"action": "help mUnit.handler"
+						},
+						{
+							"label": "mUnit.handler, in the manual",
+							"action": "readme munithandler"
+						}
+					]
+				},
+				{
+					"term": "harness",
+					"definition": "[mUnit.harness], which points the handler at a munit.config.js and opens a folder of test patches, all at once or one at a time, so one patch runs a whole suite. More generally, a harness is whatever holds the tests and runs them.",
+					"also": [
+						"handler",
+						"test wrangler",
+						"sequential mode"
+					],
+					"see": [
+						{
+							"label": "mUnit.harness help",
+							"action": "help mUnit.harness"
+						},
+						{
+							"label": "loadInFolderExample",
+							"action": "load loadInFolderExample"
+						}
+					]
+				},
+				{
+					"term": "test wrangler",
+					"definition": "The patch you open to run a suite: a harness connected to a handler, saved next to the config and the folder of tests. `munit init` on the cli writes one as runTests.maxpat; open it in Max, or give it to `munit run`.",
+					"also": [
+						"harness",
+						"handler",
+						"runner"
+					],
+					"see": [
+						{
+							"label": "Starting a suite",
+							"action": "readme starting-a-suite"
+						},
+						{
+							"label": "loadInFolderExample",
+							"action": "load loadInFolderExample"
+						}
+					]
+				},
+				{
+					"term": "registration",
+					"definition": "An assert announces itself to the handler when its patch loads, so the handler knows what to wait for. The run finishes once every registered assert has reported and nothing new has registered for a settle window. A run in which no assert registers cannot pass and the command line exits with 2 in this case.",
+					"also": [
+						"handler",
+						"settle",
+						"exit code"
+					],
+					"see": [
+						{
+							"label": "mUnit.handler, in the manual",
+							"action": "readme munithandler"
+						}
+					]
+				},
+				{
+					"term": "settle",
+					"definition": "The quiet time the handler waits for after the last assert reported before it calls the run finished: settleMs in the config, 1000 ms by default. It gives late patches time to register and the console output of the last test time to arrive.",
+					"also": [
+						"registration",
+						"timeout"
+					],
+					"see": [
+						{
+							"label": "Configuration",
+							"action": "readme configuration"
+						}
+					]
+				},
+				{
+					"term": "sequential mode",
+					"definition": "Opening one test patch at a time, waiting until its asserts have finished, closing it and opening the next, with @sequential 1 on the harness or --sequential on the command line. Slower than opening every patch at once, but patches cannot interfere through shared send and receive names, DSP or CPU load.",
+					"also": [
+						"harness",
+						"flaky test"
+					],
+					"see": [
+						{
+							"label": "sequentialHarnessExample",
+							"action": "load sequentialHarnessExample"
+						},
+						{
+							"label": "mUnit.Harness, in the manual",
+							"action": "readme munitharness"
+						}
+					]
+				},
+				{
+					"term": "configuration",
+					"definition": "A munit.config.js next to the test wrangler that tells the handler how to run: where results go, which formatters write them, the settle and timeout values, DSP settings for signal tests, whether console errors fail the suite. The harness loads it, and every key is optional.",
+					"also": [
+						"handler",
+						"harness",
+						"output folder"
+					],
+					"see": [
+						{
+							"label": "Configuration",
+							"action": "readme configuration"
+						},
+						{
+							"label": "simpleConfigExample",
+							"action": "load simpleConfigExample"
+						}
+					]
+				},
+				{
+					"term": "runner",
+					"definition": "The program that starts the tests for you and reports the result: on the command line, `munit run`. It starts Max, opens the suite, prints each verdict, quits Max and exits with a code a script can act on, so a suite can run from a terminal or a CI job without anyone clicking.",
+					"also": [
+						"exit code",
+						"CI",
+						"test wrangler"
+					],
+					"see": [
+						{
+							"label": "Running a suite",
+							"action": "readme running-a-suite"
+						},
+						{
+							"label": "munit-cli on npm",
+							"action": "url https://www.npmjs.com/package/munit-cli"
+						}
+					]
+				},
+				{
+					"term": "exit code",
+					"definition": "The number a command line program ends with, which scripts and CI read as its result. `munit run` and `munit lint` exit with 0 when everything passed, 1 when something failed, and 2 when they could not run at all, such as Max not starting or no asserts registering.",
+					"also": [
+						"runner",
+						"CI"
+					],
+					"see": [
+						{
+							"label": "Running a suite",
+							"action": "readme running-a-suite"
+						},
+						{
+							"label": "Linting patchers",
+							"action": "readme linting-patchers"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Results and CI",
+			"terms": [
+				{
+					"term": "CI",
+					"definition": "Continuous integration: a server that runs your tests on every push and refuses, or at least flags, a change that breaks them. A Max suite needs a machine with Max installed and a logged-in desktop session; the linter runs anywhere. mUnit talks to CI through exit codes and JUnit files.",
+					"also": [
+						"exit code",
+						"JUnit",
+						"lint"
+					],
+					"see": [
+						{
+							"label": "Running a suite",
+							"action": "readme running-a-suite"
+						},
+						{
+							"label": "JUnitResultsExample",
+							"action": "load JUnitResultsExample"
+						}
+					]
+				},
+				{
+					"term": "result formatter",
+					"definition": "How the handler writes the results of a run: Json by default, JUnit for CI, Html to read in a browser, or a formatter you write in JavaScript, and several at once if you like. Each one writes a results file into the output folder.",
+					"also": [
+						"JUnit",
+						"log formatter",
+						"output folder"
+					],
+					"see": [
+						{
+							"label": "Result Formatter",
+							"action": "readme result-formatter"
+						},
+						{
+							"label": "customResultAndLogFormatters",
+							"action": "load customResultAndLogFormatters"
+						}
+					]
+				},
+				{
+					"term": "JUnit",
+					"definition": "An XML format for test results that nearly every CI system understands: GitHub Actions, GitLab, Jenkins and the rest. mUnit writes it with the JUnit result formatter, one testsuite per suite, each failure with its message, expected versus actual and links to its files.",
+					"also": [
+						"result formatter",
+						"CI",
+						"failure files"
+					],
+					"see": [
+						{
+							"label": "Result Formatter",
+							"action": "readme result-formatter"
+						},
+						{
+							"label": "The JUnit XML format",
+							"action": "url https://github.com/testmoapp/junitxml"
+						}
+					]
+				},
+				{
+					"term": "log formatter",
+					"definition": "How the console output captured during a run is written to the log file, log.txt by default. A custom log formatter reshapes the lines, for example into the format your CI provider shows best. Log output filters leave matching lines out, to keep secrets out of a shared console.",
+					"also": [
+						"result formatter",
+						"output folder"
+					],
+					"see": [
+						{
+							"label": "Log Formatter",
+							"action": "readme log-formatter"
+						},
+						{
+							"label": "customResultAndLogFormatters",
+							"action": "load customResultAndLogFormatters"
+						}
+					]
+				},
+				{
+					"term": "output folder",
+					"definition": "Where a run writes its results, its log and its failure files: outputDir in the config, logs next to the config by default, or --output on the command line. With runFolder set each run gets its own timestamped folder inside it.",
+					"also": [
+						"configuration",
+						"failure files"
+					],
+					"see": [
+						{
+							"label": "Configuration",
+							"action": "readme configuration"
+						}
+					]
+				},
+				{
+					"term": "console errors",
+					"definition": "Anything printed to the Max console as an error while the suite runs. With ignoreConsoleErrors set to false in the config, one error fails the whole run even if every assert passed, which catches problems no assert was watching for.",
+					"also": [
+						"configuration",
+						"verdict"
+					],
+					"see": [
+						{
+							"label": "consoleErrorExample",
+							"action": "load consoleErrorExample"
+						},
+						{
+							"label": "Ignore Console Errors",
+							"action": "readme ignore-console-errors"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Linting",
+			"terms": [
+				{
+					"term": "lint",
+					"definition": "Checking a patcher file for problems by reading the saved file against a set of rules, without opening or running it: eg. no zl.reg in this project, every v8 has @autowatch 0, no fan-out without a trigger. munit lint does it from the command line and in CI; [mUnit.lint] does it in Max every time you save.",
+					"also": [
+						"rule",
+						"finding",
+						"lint server"
+					],
+					"see": [
+						{
+							"label": "mUnit.lint help",
+							"action": "help mUnit.lint"
+						},
+						{
+							"label": "Linting patchers",
+							"action": "readme linting-patchers"
+						},
+						{
+							"label": "lintExample",
+							"action": "load lintExample"
+						}
+					]
+				},
+				{
+					"term": "rule",
+					"definition": "One check the linter makes, written as a JSON object: a kind that says what is checked, settings that say on what, a level, a message, and optinally a fix. When the JSON kinds cannot say it, a rule of kind `script` names a JavaScript module that does.",
+					"also": [
+						"lint",
+						"level",
+						"fix"
+					],
+					"see": [
+						{
+							"label": "Rules",
+							"action": "readme rules"
+						},
+						{
+							"label": "lintExample",
+							"action": "load lintExample"
+						}
+					]
+				},
+				{
+					"term": "finding",
+					"definition": "One thing a rule reports about one box: the rule, its level, the file and the subpatchers on the way to the box, its position, and the message. The Max console, the text report and the JUnit report all list findings; --format json prints them for a tool to read.",
+					"also": [
+						"rule",
+						"level"
+					],
+					"see": [
+						{
+							"label": "Linting patchers",
+							"action": "readme linting-patchers"
+						}
+					]
+				},
+				{
+					"term": "level",
+					"definition": "How serious a rule's findings are: off, warn or block. A warning is shown and nothing more; a blocking finding makes munit lint exit with 1, which fails the CI job. Start a new rule at warn, and raise it to block once the project is clean.",
+					"also": [
+						"rule",
+						"exit code",
+						"override"
+					],
+					"see": [
+						{
+							"label": "Rules",
+							"action": "readme rules"
+						}
+					]
+				},
+				{
+					"term": "config cascade",
+					"definition": "How the munit-lint.json files that apply to a patch are found and combined: every one in the patch's folder and in the folders above it, outermost first, until one says root is true. Each inner config adds to the outer ones, so a subfolder can be stricter than its project without repeating it.",
+					"also": [
+						"override",
+						"lint server"
+					],
+					"see": [
+						{
+							"label": "Configuration",
+							"action": "readme configuration-1"
+						},
+						{
+							"label": "lintConfigExample",
+							"action": "load lintConfigExample"
+						}
+					]
+				},
+				{
+					"term": "override",
+					"definition": "A per-file change of rule levels in a config: help files held to a different standard than test patches, a legacy folder where a rule is off. Later overrides win, and --list-rules shows the rules in force for a file after every override.",
+					"also": [
+						"config cascade",
+						"level"
+					],
+					"see": [
+						{
+							"label": "Configuration",
+							"action": "readme configuration-1"
+						}
+					]
+				},
+				{
+					"term": "fix",
+					"definition": "An edit a rule knows how to make: replace an object, set an attribute. munit lint --fix, the fix message to [mUnit.lint] or the Apply fixes switch in the lint server apply them and write the patches back, as small edits that leave the rest of the file as Max saved it.",
+					"also": [
+						"rule",
+						"lint server"
+					],
+					"see": [
+						{
+							"label": "Fixing",
+							"action": "readme fixing"
+						}
+					]
+				},
+				{
+					"term": "lint server",
+					"definition": "[mUnit.lint] left running while you work, so every patch you save is linted at once and the findings appear in the Max console. Extras > mUnit > mUnit Lint Server is a ready-made one: automatic for whatever you save anywhere, or watching a project folder as the top of the config cascade.",
+					"also": [
+						"lint",
+						"config cascade",
+						"fix"
+					],
+					"see": [
+						{
+							"label": "mUnit Lint Server",
+							"action": "load mUnit Lint Server"
+						},
+						{
+							"label": "Linting in Max",
+							"action": "readme linting-in-max-as-you-save"
+						}
+					]
+				}
+			]
+		}
+	]
+}

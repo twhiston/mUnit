@@ -192,7 +192,8 @@ exports.check = (ctx) => {
 `options`, `state`, and `report`. A finding with a `box` gets a location; one
 with `edits` can be fixed. The module is CommonJS (`exports.check`), loaded
 with `require` by `munit lint` and by `[mUnit.lint]` in Max alike, whose
-server is a `node.script`. The reference is `api/munit-lint/README.md`,
+server is a `node.script`. The reference is `munit-lint` in **Extras > mUnit >
+mUnit API**, or `api/markdown/munit-lint/README.md`,
 and `api/munit-lint.d.ts` gives completion on `ctx` in an editor through
 a `jsconfig.json` that includes the module (`examples/lintExample` has
 one).

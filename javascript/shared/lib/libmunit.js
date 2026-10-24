@@ -1302,6 +1302,9 @@ var AssertEngine = class {
   // The assert has no @name of its own (it defaults to the uuid, which
   // changes each load), so it can't name a snapshot
   unnamed = false;
+  // Inputs and bangs that arrived before registration, replayed in order
+  // once the assert is registered. A bang is kept as a bang, not as the
+  // value stored when it arrived: that value is only applied on replay too.
   queue = [];
   // Latest value per input: index 0 holds in1
   values = [];
@@ -1463,8 +1466,12 @@ var AssertEngine = class {
       this.queue.length = 0;
       return s.dataInlets;
     }
-    for (const [inlet, value] of this.queue.splice(0)) {
-      this.input(inlet, value);
+    for (const queued of this.queue.splice(0)) {
+      if (queued === "bang") {
+        this.bang();
+      } else {
+        this.input(queued[0], queued[1]);
+      }
     }
     return s.dataInlets;
   }
@@ -1495,7 +1502,7 @@ var AssertEngine = class {
   // Evaluate again with the stored values (a bang on the hot inlet)
   bang() {
     if (!this.registered) {
-      this.queue.push([1, this.values[0]]);
+      this.queue.push("bang");
       return;
     }
     this.evaluate();
@@ -1723,10 +1730,11 @@ var DspController = class {
     return this.menus.driver.findIndex((item) => key(item) === key(name));
   }
   // dsp apply <driver or ""> <sr or 0> <vs or 0> <settleMs>: switches DSP
-  // off, switches the driver and waits settleMs for the change to land, sets
-  // the rates and switches DSP on. It answers dspReady <sr> <vs> <driver>
-  // only once dspstate~ has reported this start with what was asked for, and
-  // that has held for DSP_STABLE_MS; otherwise dspFailed with what is wrong
+  // off, a step later switches the driver and waits settleMs for the change
+  // to land, sets the rates and, a step later, switches DSP on. It answers
+  // dspReady <sr> <vs> <driver> only once dspstate~ has reported this start
+  // with what was asked for, and that has held for DSP_STABLE_MS; otherwise
+  // dspFailed with what is wrong
   apply(driver, sr, vs, settleMs) {
     if (this.saved === null) {
       this.saved = { driver: this.index.driver, sr: this.value.sr, sigvs: this.value.sigvs, on: this.value.switch > 0 ? 1 : 0 };
@@ -1744,23 +1752,33 @@ var DspController = class {
     }
     this.host.toAdstatus("switch", 0);
     const changing = wanted.driver >= 0 && wanted.driver !== this.index.driver;
-    if (changing) {
-      this.host.toAdstatus("driver", wanted.driver);
-    }
-    this.host.schedule(() => {
-      if (generation !== this.generation) {
-        return;
-      }
+    const current = () => generation === this.generation;
+    const ratesThenOn = () => {
       this.setRates(wanted.sr, wanted.vs);
       this.host.schedule(() => {
-        if (generation !== this.generation) {
+        if (!current()) {
           return;
         }
         this.freshStart = false;
         this.host.toAdstatus("switch", 1);
         this.confirm(wanted, settle, generation);
       }, DSP_STEP_MS);
-    }, changing ? settle : DSP_STEP_MS);
+    };
+    this.host.schedule(() => {
+      if (!current()) {
+        return;
+      }
+      if (!changing) {
+        ratesThenOn();
+        return;
+      }
+      this.host.toAdstatus("driver", wanted.driver);
+      this.host.schedule(() => {
+        if (current()) {
+          ratesThenOn();
+        }
+      }, settle);
+    }, DSP_STEP_MS);
   }
   // What is not yet as apply() asked; empty when everything is
   mismatches(wanted) {
@@ -1816,10 +1834,13 @@ var DspController = class {
     };
     this.host.schedule(poll, DSP_POLL_MS);
   }
-  // dsp restore <settleMs>: the state before apply(), then dspRestored
+  // dsp restore <settleMs>: the state before apply(), then dspRestored. The
+  // same order as apply, with DSP off while anything changes: a step after
+  // the switch off the driver goes back and gets settleMs to land, then the
+  // rates, and a step later DSP is switched back to what it was
   restore(settleMs) {
     this.watching = null;
-    this.generation++;
+    const generation = ++this.generation;
     const was = this.saved;
     this.saved = null;
     if (was === null) {
@@ -1827,18 +1848,34 @@ var DspController = class {
       return;
     }
     const settle = Math.max(0, Number(settleMs) || 0);
-    this.host.toAdstatus("switch", was.on);
-    let changing = false;
-    if (was.driver >= 0 && was.driver !== this.index.driver) {
-      this.host.toAdstatus("driver", was.driver);
-      changing = true;
-    }
-    this.host.schedule(() => {
+    const current = () => generation === this.generation;
+    this.host.toAdstatus("switch", 0);
+    const changing = was.driver >= 0 && was.driver !== this.index.driver;
+    const ratesThenOn = () => {
       this.setRates(was.sr, was.sigvs);
       this.host.schedule(() => {
+        if (!current()) {
+          return;
+        }
+        this.host.toAdstatus("switch", was.on);
         this.host.reply("dspRestored");
       }, DSP_STEP_MS);
-    }, changing ? settle : 0);
+    };
+    this.host.schedule(() => {
+      if (!current()) {
+        return;
+      }
+      if (!changing) {
+        ratesThenOn();
+        return;
+      }
+      this.host.toAdstatus("driver", was.driver);
+      this.host.schedule(() => {
+        if (current()) {
+          ratesThenOn();
+        }
+      }, settle);
+    }, DSP_STEP_MS);
   }
   setRates(sr, vs) {
     if (sr > 0) {

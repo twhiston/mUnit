@@ -10,10 +10,18 @@
 // jsconfig.json next to your scripts (see the examples/ folder in the package)
 // and annotate: /** @type {import("munit-lint").X} */
 declare module 'munit-lint' {
-  /** The kinds of rule: what `kind` in a rule's JSON may be. */
+  /**
+   * The kinds of rule: what `kind` in a rule's JSON may be.
+   *
+   * @category Script rules
+   */
   export type RuleKind = 'forbid-object' | 'forbid-path' | 'require-attribute' | 'attribute-value' | 'max-instances' | 'fanout-without-trigger' | 'overlapping-boxes' | 'naming' | 'script';
 
-  /** Which patchers in a file a rule looks at. */
+  /**
+   * Which patchers in a file a rule looks at.
+   *
+   * @category Script rules
+   */
   export interface RuleScope {
     /**
      * The patcher namespaces the rule applies to: `box` (an ordinary patcher,
@@ -22,7 +30,11 @@ declare module 'munit-lint' {
     namespace: string[];
   }
 
-  /** The settings every rule has, whatever its kind. */
+  /**
+   * The settings every rule has, whatever its kind.
+   *
+   * @category Script rules
+   */
   export interface RuleBase {
     /** The rule's id, unique within a config: what findings and overrides name it by. */
     id: string;
@@ -40,6 +52,8 @@ declare module 'munit-lint' {
    * One thing a script rule found. Give it a `box` so the finding has a
    * location (the box's patcher is found for you); a finding without one is
    * reported against the patcher, or the file's root patcher.
+   *
+   * @category Script rules
    */
   export interface ScriptFinding {
     /** What is wrong, in a sentence. */
@@ -52,7 +66,11 @@ declare module 'munit-lint' {
     edits?: Edit[];
   }
 
-  /** State a script rule keeps for one run: a fresh object per `munit lint`, shared by `begin`, every `check` and `end`. */
+  /**
+   * State a script rule keeps for one run: a fresh object per `munit lint`, shared by `begin`, every `check` and `end`.
+   *
+   * @category Script rules
+   */
   export type RuleState = Record<string, unknown>;
 
   /**
@@ -76,6 +94,8 @@ declare module 'munit-lint' {
    *   }
    * };
    * ```
+   *
+   * @category Script rules
    */
   export interface ScriptContext {
     /** The rule being run, with its `options`, `level` and `scope`. */
@@ -104,7 +124,11 @@ declare module 'munit-lint' {
     relatedFiles: () => string[];
   }
 
-  /** What `exports.meta` of a script rule's module may declare. */
+  /**
+   * What `exports.meta` of a script rule's module may declare.
+   *
+   * @category Script rules
+   */
   export interface ScriptMeta {
     /** One line on what the rule checks; `--list-rules` prints it. */
     description?: string;
@@ -118,7 +142,11 @@ declare module 'munit-lint' {
     options?: JsonSchema;
   }
 
-  /** What `begin` and `end` of {@link ProjectHooks} receive. */
+  /**
+   * What `begin` and `end` of {@link ProjectHooks} receive.
+   *
+   * @category Script rules
+   */
   export interface ProjectContext {
     /** The rule, with its `options`, `level` and `scope`. */
     rule: ScriptRule;
@@ -130,13 +158,21 @@ declare module 'munit-lint' {
     state: RuleState;
   }
 
-  /** A finding reported from `end`, against one of the run's files. */
+  /**
+   * A finding reported from `end`, against one of the run's files.
+   *
+   * @category Script rules
+   */
   export interface ProjectFinding extends ScriptFinding {
     /** The file, as named in {@link ProjectContext.files}. */
     file: string;
   }
 
-  /** What `end` receives: the project context plus a way to report. */
+  /**
+   * What `end` receives: the project context plus a way to report.
+   *
+   * @category Script rules
+   */
   export interface ProjectEndContext extends ProjectContext {
     /** Reports one finding against a file of the run. */
     report: (finding: ProjectFinding) => void;
@@ -148,6 +184,8 @@ declare module 'munit-lint' {
    * files are linted, `check` runs per file and may collect into `ctx.state`,
    * and `end` runs once after, reporting findings against files. Costlier
    * than `check` alone: in Max, a save then lints the whole folder again.
+   *
+   * @category Script rules
    */
   export interface ProjectHooks {
     /** Runs once before the files are linted, with the list of files; set up `ctx.state` here. */
@@ -156,7 +194,11 @@ declare module 'munit-lint' {
     end?: (ctx: ProjectEndContext) => void;
   }
 
-  /** The shape of a script rule's module: `check` is required, `meta` and `project` are optional. */
+  /**
+   * The shape of a script rule's module: `check` is required, `meta` and `project` are optional.
+   *
+   * @category Script rules
+   */
   export interface ScriptModule {
     /** Called once per file with the patchers in the rule's scope. */
     check: ScriptCheck;
@@ -169,10 +211,16 @@ declare module 'munit-lint' {
   /**
    * The function a script rule's module exports as `check`. It may return its
    * findings, report them through the context, or both.
+   *
+   * @category Script rules
    */
   export type ScriptCheck = (ctx: ScriptContext) => ScriptFinding[] | undefined | void;
 
-  /** A rule of kind `script`: a JavaScript (CommonJS) module decides what to report, under `munit lint` and in `[mUnit.lint]` alike. */
+  /**
+   * A rule of kind `script`: a JavaScript (CommonJS) module decides what to report, under `munit lint` and in `[mUnit.lint]` alike.
+   *
+   * @category Script rules
+   */
   export interface ScriptRule extends RuleBase {
     /** Always `script`. */
     kind: 'script';
@@ -199,7 +247,11 @@ declare module 'munit-lint' {
    * minLength, maxLength, pattern, anyOf, oneOf, allOf, not. Other keywords
    * (description, default, $schema, ...) are ignored.
    */
-  /** A JSON Schema fragment, as far as {@link validateAgainstSchema} reads it. */
+  /**
+   * A JSON Schema fragment, as far as {@link validateAgainstSchema} reads it.
+   *
+   * @category Options schema
+   */
   export interface JsonSchema {
     /** `"string"`, `"number"`, `"integer"`, `"boolean"`, `"array"`, `"object"`, `"null"`, or a list of them. */
     type?: string | string[];
@@ -247,6 +299,8 @@ declare module 'munit-lint' {
   /**
    * Every way `value` breaks `schema`, one `<path>: <problem>` line each, or
    * `[]` when it conforms. `path` names the value in messages, e.g. `options`.
+   *
+   * @category Options schema
    */
   export function validateAgainstSchema(value: unknown, schema: JsonSchema, path?: string): string[];
 
@@ -260,10 +314,16 @@ declare module 'munit-lint' {
    * `[gen~]` and `.gendsp` files, `jit.gen` inside `[jit.gen]`, `[jit.pix]` and
    * `[jit.gl.pix]`, `rnbo` inside `[rnbo~]` and `.rnbopat` files. Max's
    * `classnamespace`, so other values are possible.
+   *
+   * @category Patcher model
    */
   export type Namespace = 'box' | 'dsp.gen' | 'jit.gen' | 'rnbo' | string;
 
-  /** One box in a patcher: an object, message, comment or UI object. */
+  /**
+   * One box in a patcher: an object, message, comment or UI object.
+   *
+   * @category Patcher model
+   */
   export interface Box {
     /** Max's id for the box, e.g. `obj-12`, unique within its patcher. */
     id: string;
@@ -294,7 +354,11 @@ declare module 'munit-lint' {
     raw: Record<string, unknown>;
   }
 
-  /** A patch cord. */
+  /**
+   * A patch cord.
+   *
+   * @category Patcher model
+   */
   export interface Line {
     /** The box id and outlet number it starts from. */
     source: [string, number];
@@ -306,7 +370,11 @@ declare module 'munit-lint' {
     raw: Record<string, unknown>;
   }
 
-  /** A patcher: the root of a file, or one nested in a box. */
+  /**
+   * A patcher: the root of a file, or one nested in a box.
+   *
+   * @category Patcher model
+   */
   export interface Patcher {
     /** What kind of patcher this is. */
     namespace: Namespace;
@@ -322,7 +390,11 @@ declare module 'munit-lint' {
     raw: Record<string, unknown>;
   }
 
-  /** A patch cord with both ends resolved to their boxes, from {@link connectionsFrom} and {@link connectionsTo}. */
+  /**
+   * A patch cord with both ends resolved to their boxes, from {@link connectionsFrom} and {@link connectionsTo}.
+   *
+   * @category Patcher model
+   */
   export interface Connection {
     /** The cord as saved. */
     line: Line;
@@ -338,7 +410,11 @@ declare module 'munit-lint' {
     disabled: boolean;
   }
 
-  /** A box that sends or receives by name, from {@link sends} and {@link receives}. */
+  /**
+   * A box that sends or receives by name, from {@link sends} and {@link receives}.
+   *
+   * @category Patcher model
+   */
   export interface NamedBox {
     /** The patcher the box sits in. */
     patcher: Patcher;
@@ -350,7 +426,11 @@ declare module 'munit-lint' {
     role: 'send' | 'receive' | 'both';
   }
 
-  /** A patcher file: `.maxpat`, `.maxhelp`, `.gendsp` or `.rnbopat`. */
+  /**
+   * A patcher file: `.maxpat`, `.maxhelp`, `.gendsp` or `.rnbopat`.
+   *
+   * @category Patcher model
+   */
   export interface PatcherDocument {
     /** The path the caller knows the file by; reported as given. */
     file: string;
@@ -366,10 +446,16 @@ declare module 'munit-lint' {
    * argument of `zl` and `mc` folded into a dotted name (`zl reg` is `zl.reg`).
    * Use it to compare a name a rule's options give with `box.object`. Null for
    * no tokens.
+   *
+   * @category Patcher model
    */
   export function normaliseObjectName(tokens: string[]): string | null;
 
-  /** One box and the patcher it sits in, from {@link walkBoxes}. */
+  /**
+   * One box and the patcher it sits in, from {@link walkBoxes}.
+   *
+   * @category Patcher model
+   */
   export interface Visit {
     /** The patcher holding the box. */
     patcher: Patcher;
@@ -377,29 +463,49 @@ declare module 'munit-lint' {
     box: Box;
   }
 
-  /** Every box in a patcher and its nested patchers, depth first, with the patcher it sits in. */
+  /**
+   * Every box in a patcher and its nested patchers, depth first, with the patcher it sits in.
+   *
+   * @category Patcher model
+   */
   export function walkBoxes(patcher: Patcher): Generator<Visit>;
 
-  /** A patcher and every patcher nested in it, depth first, the given one first. */
+  /**
+   * A patcher and every patcher nested in it, depth first, the given one first.
+   *
+   * @category Patcher model
+   */
   export function walkPatchers(patcher: Patcher): Generator<Patcher>;
 
-  /** The box with that id in the patcher (not its nested patchers), or undefined. */
+  /**
+   * The box with that id in the patcher (not its nested patchers), or undefined.
+   *
+   * @category Patcher model
+   */
   export function findBox(patcher: Patcher, id: string): Box | undefined;
 
   /**
    * The cords leaving a box, in saved order: every outlet, or one outlet when
    * `outlet` is given. Cords stay inside a patcher, so `patcher` is the one the
    * box sits in; a box from another patcher has no connections there.
+   *
+   * @category Patcher model
    */
   export function connectionsFrom(patcher: Patcher, box: Box, outlet?: number): Connection[];
 
-  /** The cords entering a box, in saved order: every inlet, or one inlet when `inlet` is given. */
+  /**
+   * The cords entering a box, in saved order: every inlet, or one inlet when `inlet` is given.
+   *
+   * @category Patcher model
+   */
   export function connectionsTo(patcher: Patcher, box: Box, inlet?: number): Connection[];
 
   /**
    * Every box that is the object `name` in the given patchers, with its
    * patcher. The name is normalised like {@link Box.object}: `t`, `trigger`,
    * `zl reg` and `zl.reg` all work, and UI objects match by class (`toggle`).
+   *
+   * @category Patcher model
    */
   export function boxesByObject(patchers: Patcher[], name: string): Visit[];
 
@@ -408,19 +514,37 @@ declare module 'munit-lint' {
    * `[send~]`, `[mc.send~]`, `[forward]`, and the bound objects `[value]`,
    * `[pv]`, `[pvar]` and `[pattr]`, which count on both sides. In document
    * order; a box with no name argument is left out.
+   *
+   * @category Patcher model
    */
   export function sends(patchers: Patcher[]): NamedBox[];
 
-  /** Every box that receives from a name: `[receive]`, `[r]`, `[receive~]`, `[mc.receive~]` and the bound objects. */
+  /**
+   * Every box that receives from a name: `[receive]`, `[r]`, `[receive~]`, `[mc.receive~]` and the bound objects.
+   *
+   * @category Patcher model
+   */
   export function receives(patchers: Patcher[]): NamedBox[];
 
-  /** A rule's level: `off` (not run), `warn` (reported) or `block` (reported, and `munit lint` exits 1). */
+  /**
+   * A rule's level: `off` (not run), `warn` (reported) or `block` (reported, and `munit lint` exits 1).
+   *
+   * @category Levels and edits
+   */
   export type Level = 'off' | 'warn' | 'block';
 
-  /** A level a finding can have: `warn` or `block`. */
+  /**
+   * A level a finding can have: `warn` or `block`.
+   *
+   * @category Lint results
+   */
   export type ReportedLevel = Exclude<Level, 'off'>;
 
-  /** Replaces the text of an object, message or comment box. */
+  /**
+   * Replaces the text of an object, message or comment box.
+   *
+   * @category Levels and edits
+   */
   export interface SetTextEdit {
     /** Always `set-text`. */
     op: 'set-text';
@@ -432,7 +556,11 @@ declare module 'munit-lint' {
     text: string;
   }
 
-  /** Sets an attribute: inline in an object box's text (`@autowatch 0`), or as a box key for UI objects. */
+  /**
+   * Sets an attribute: inline in an object box's text (`@autowatch 0`), or as a box key for UI objects.
+   *
+   * @category Levels and edits
+   */
   export interface SetAttributeEdit {
     /** Always `set-attribute`. */
     op: 'set-attribute';
@@ -446,7 +574,11 @@ declare module 'munit-lint' {
     value: unknown;
   }
 
-  /** Removes a box and the cords connected to it. */
+  /**
+   * Removes a box and the cords connected to it.
+   *
+   * @category Levels and edits
+   */
   export interface RemoveBoxEdit {
     /** Always `remove-box`. */
     op: 'remove-box';
@@ -456,7 +588,11 @@ declare module 'munit-lint' {
     box: string;
   }
 
-  /** Adds a box, given as the JSON Max would save for it. */
+  /**
+   * Adds a box, given as the JSON Max would save for it.
+   *
+   * @category Levels and edits
+   */
   export interface InsertBoxEdit {
     /** Always `insert-box`. */
     op: 'insert-box';
@@ -470,10 +606,16 @@ declare module 'munit-lint' {
    * A change to the patcher file that `--fix` (or `fix` sent to `[mUnit.lint]`)
    * applies. Applying edits and writing the file back in Max's own formatting
    * is the fixer's job; a rule only describes them.
+   *
+   * @category Levels and edits
    */
   export type Edit = SetTextEdit | SetAttributeEdit | RemoveBoxEdit | InsertBoxEdit;
 
-  /** One finding, as the reports and `lintFiles` carry it. */
+  /**
+   * One finding, as the reports and `lintFiles` carry it.
+   *
+   * @category Lint results
+   */
   export interface Diagnostic {
     /** The id of the rule that reported it. */
     rule: string;
@@ -495,7 +637,11 @@ declare module 'munit-lint' {
     edits: Edit[];
   }
 
-  /** What a lint run produced: the result of `munit lint`, and what `lintFiles` returns. */
+  /**
+   * What a lint run produced: the result of `munit lint`, and what `lintFiles` returns.
+   *
+   * @category Lint results
+   */
   export interface LintRun {
     /** Every file that was linted, as reported (relative to the working directory). */
     files: string[];
@@ -517,7 +663,11 @@ declare module 'munit-lint' {
     projectHooks?: boolean;
   }
 
-  /** One rule as it applies to a file: its level after overrides, and where it came from. */
+  /**
+   * One rule as it applies to a file: its level after overrides, and where it came from.
+   *
+   * @category Lint results
+   */
   export interface RuleListing {
     /** The rule's id. */
     id: string;
@@ -531,7 +681,11 @@ declare module 'munit-lint' {
     description?: string;
   }
 
-  /** The rules in force for one file, from `--list-rules`. */
+  /**
+   * The rules in force for one file, from `--list-rules`.
+   *
+   * @category Lint results
+   */
   export interface FileRules {
     /** The file, as reported. */
     file: string;

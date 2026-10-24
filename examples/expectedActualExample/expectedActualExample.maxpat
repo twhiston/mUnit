@@ -3,14 +3,90 @@
         "fileversion": 1,
         "appversion": {
             "major": 9,
-            "minor": 1,
-            "revision": 4,
+            "minor": 2,
+            "revision": 0,
             "architecture": "x64",
             "modernui": 1
         },
         "classnamespace": "box",
-        "rect": [ 384.0, 226.0, 1137.0, 620.0 ],
+        "rect": [ 378.0, 226.0, 1100.0, 600.0 ],
         "boxes": [
+            {
+                "box": {
+                    "id": "obj-1",
+                    "maxclass": "newobj",
+                    "numinlets": 1,
+                    "numoutlets": 2,
+                    "outlettype": [ "float", "float" ],
+                    "patching_rect": [ 639.0, 287.0, 37.5, 22.0 ],
+                    "text": "t f f"
+                }
+            },
+            {
+                "box": {
+                    "angle": 0.0,
+                    "background": 1,
+                    "bgcolor": [ 0.16, 0.17, 0.2, 1 ],
+                    "id": "hdr-panel",
+                    "maxclass": "panel",
+                    "mode": 0,
+                    "numinlets": 1,
+                    "numoutlets": 0,
+                    "patching_rect": [ 0.0, 0.0, 1100.0, 64.0 ],
+                    "proportion": 0.39,
+                    "shadow": -1
+                }
+            },
+            {
+                "box": {
+                    "fontface": 1,
+                    "fontsize": 20.0,
+                    "id": "hdr-title",
+                    "maxclass": "comment",
+                    "numinlets": 1,
+                    "numoutlets": 0,
+                    "patching_rect": [ 20.0, 11.0, 930.0, 29.0 ],
+                    "text": "Expected versus actual",
+                    "textcolor": [ 0.97, 0.97, 0.97, 1.0 ]
+                }
+            },
+            {
+                "box": {
+                    "fontsize": 12.0,
+                    "id": "hdr-sub",
+                    "maxclass": "comment",
+                    "numinlets": 1,
+                    "numoutlets": 0,
+                    "patching_rect": [ 20.0, 41.0, 930.0, 20.0 ],
+                    "text": "Three asserts fail on purpose: the console and logs/results.json carry expected, actual and the operator",
+                    "textcolor": [ 0.75, 0.77, 0.82, 1.0 ]
+                }
+            },
+            {
+                "box": {
+                    "fontsize": 12.0,
+                    "hint": "this example's folder: the patch, its config, references and results",
+                    "id": "hdr-open",
+                    "maxclass": "textbutton",
+                    "numinlets": 1,
+                    "numoutlets": 3,
+                    "outlettype": [ "", "", "int" ],
+                    "parameter_enable": 0,
+                    "patching_rect": [ 970.0, 20.0, 110.0, 24.0 ],
+                    "text": "Open folder"
+                }
+            },
+            {
+                "box": {
+                    "hidden": 1,
+                    "id": "hdr-openfolder",
+                    "maxclass": "newobj",
+                    "numinlets": 1,
+                    "numoutlets": 0,
+                    "patching_rect": [ 915.0, 68.0, 165.0, 22.0 ],
+                    "text": "mUnit.examples.openFolder"
+                }
+            },
             {
                 "box": {
                     "id": "obj-30",
@@ -18,52 +94,8 @@
                     "maxclass": "comment",
                     "numinlets": 1,
                     "numoutlets": 0,
-                    "patching_rect": [ 141.0, 115.0, 360.0, 74.0 ],
+                    "patching_rect": [ 172.0, 162.0, 360.0, 74.0 ],
                     "text": "mUnit.loadbang only bangs once mUnit is up and running. Because mUnit is written in node you need to wait for it to start before you begin your tests, so use this instead of a normal loadbang. You can use the built-in \"test\" linting rules configuration to ensure you don't use loadbangs in your test patches"
-                }
-            },
-            {
-                "box": {
-                    "id": "obj-of1",
-                    "maxclass": "message",
-                    "numinlets": 2,
-                    "numoutlets": 1,
-                    "outlettype": [ "" ],
-                    "patching_rect": [ 807.0, 16.0, 75.0, 22.0 ],
-                    "text": "open folder"
-                }
-            },
-            {
-                "box": {
-                    "id": "obj-of2",
-                    "maxclass": "newobj",
-                    "numinlets": 1,
-                    "numoutlets": 0,
-                    "patching_rect": [ 807.0, 65.0, 165.0, 22.0 ],
-                    "text": "mUnit.examples.openFolder"
-                }
-            },
-            {
-                "box": {
-                    "id": "obj-of1c",
-                    "linecount": 3,
-                    "maxclass": "comment",
-                    "numinlets": 1,
-                    "numoutlets": 0,
-                    "patching_rect": [ 887.0, 16.0, 87.0, 47.0 ],
-                    "text": "this example's files and results"
-                }
-            },
-            {
-                "box": {
-                    "fontface": 1,
-                    "fontsize": 16.0,
-                    "id": "obj-1",
-                    "maxclass": "comment",
-                    "numinlets": 1,
-                    "numoutlets": 0,
-                    "patching_rect": [ 20.0, 15.0, 600.0, 24.0 ],
-                    "text": "Expected versus actual, and the helpers"
                 }
             },
             {
@@ -73,7 +105,7 @@
                     "maxclass": "comment",
                     "numinlets": 1,
                     "numoutlets": 0,
-                    "patching_rect": [ 20.0, 45.0, 583.0, 60.0 ],
+                    "patching_rect": [ 20.0, 96.0, 583.0, 60.0 ],
                     "text": "Three of these asserts fail on purpose. Watch the console: each result is one line (ok / FAIL with the reason). Then open logs/results.json: a failed result carries expected, actual, operator and, for lists and dicts, a diff per path. A plain comparison like in1 * 2 == in2 is split at its operator, so the left side is the actual value."
                 }
             },
@@ -84,7 +116,7 @@
                     "numinlets": 0,
                     "numoutlets": 1,
                     "outlettype": [ "" ],
-                    "patching_rect": [ 660.0, 45.0, 98.5, 22.0 ],
+                    "patching_rect": [ 970.0, 96.0, 98.5, 22.0 ],
                     "text": "mUnit.harness"
                 }
             },
@@ -95,7 +127,7 @@
                     "numinlets": 1,
                     "numoutlets": 2,
                     "outlettype": [ "bang", "bang" ],
-                    "patching_rect": [ 660.0, 85.0, 98.5, 22.0 ],
+                    "patching_rect": [ 970.0, 136.0, 98.5, 22.0 ],
                     "text": "mUnit.handler"
                 }
             },
@@ -106,7 +138,7 @@
                     "maxclass": "comment",
                     "numinlets": 1,
                     "numoutlets": 0,
-                    "patching_rect": [ 660.0, 115.0, 226.0, 60.0 ],
+                    "patching_rect": [ 739.0, 98.0, 226.0, 60.0 ],
                     "text": "mUnit.harness reads munit.config.js from this folder and configures mUnit.handler. Every [mUnit.loadbang] then fires."
                 }
             },
@@ -117,7 +149,7 @@
                     "numinlets": 1,
                     "numoutlets": 1,
                     "outlettype": [ "bang" ],
-                    "patching_rect": [ 20.0, 118.0, 105.0, 22.0 ],
+                    "patching_rect": [ 20.0, 169.0, 105.0, 22.0 ],
                     "text": "mUnit.loadbang"
                 }
             },
@@ -128,41 +160,24 @@
                     "numinlets": 1,
                     "numoutlets": 6,
                     "outlettype": [ "bang", "bang", "bang", "bang", "bang", "bang" ],
-                    "patching_rect": [ 20.0, 153.0, 110.0, 22.0 ],
+                    "patching_rect": [ 20.0, 204.0, 146.75, 22.0 ],
                     "text": "t b b b b b b"
                 }
             },
             {
                 "box": {
+                    "background": 1,
+                    "bubble": 1,
+                    "bubbleside": 2,
+                    "fontsize": 12.0,
                     "id": "obj-8",
                     "linecount": 2,
                     "maxclass": "comment",
                     "numinlets": 1,
                     "numoutlets": 0,
-                    "patching_rect": [ 20.0, 250.0, 155.0, 33.0 ],
-                    "text": "A plain comparison. Fails: actual 6, expected 7"
-                }
-            },
-            {
-                "box": {
-                    "id": "obj-9",
-                    "maxclass": "message",
-                    "numinlets": 2,
-                    "numoutlets": 1,
-                    "outlettype": [ "" ],
-                    "patching_rect": [ 179.0, 250.0, 30.0, 22.0 ],
-                    "text": "3"
-                }
-            },
-            {
-                "box": {
-                    "id": "obj-10",
-                    "maxclass": "message",
-                    "numinlets": 2,
-                    "numoutlets": 1,
-                    "outlettype": [ "" ],
-                    "patching_rect": [ 275.5, 250.0, 30.0, 22.0 ],
-                    "text": "7"
+                    "patching_rect": [ 20.0, 277.0, 155.0, 52.0 ],
+                    "text": "A plain comparison. \nFails: actual 6, expected 7",
+                    "textjustification": 1
                 }
             },
             {
@@ -172,7 +187,7 @@
                     "maxclass": "newobj",
                     "numinlets": 3,
                     "numoutlets": 0,
-                    "patching_rect": [ 20.0, 290.0, 274.5, 22.0 ],
+                    "patching_rect": [ 20.0, 341.0, 274.5, 22.0 ],
                     "text": "mUnit.assert in1 * 2 == in2 @name doubled"
                 }
             },
@@ -182,9 +197,9 @@
                     "maxclass": "newobj",
                     "numinlets": 1,
                     "numoutlets": 2,
-                    "outlettype": [ "bang", "bang" ],
-                    "patching_rect": [ 179.0, 211.0, 115.5, 22.0 ],
-                    "text": "t b b"
+                    "outlettype": [ "int", "int" ],
+                    "patching_rect": [ 147.75, 253.0, 146.75, 22.0 ],
+                    "text": "t 3 7"
                 }
             },
             {
@@ -194,7 +209,7 @@
                     "maxclass": "comment",
                     "numinlets": 1,
                     "numoutlets": 0,
-                    "patching_rect": [ 343.25, 243.0, 290.0, 47.0 ],
+                    "patching_rect": [ 343.25, 294.0, 290.0, 47.0 ],
                     "text": "approx(actual, expected, abs): quote an expression that has commas. Passes within 0.001, fails within 0.0001"
                 }
             },
@@ -205,7 +220,7 @@
                     "numinlets": 2,
                     "numoutlets": 1,
                     "outlettype": [ "" ],
-                    "patching_rect": [ 638.0, 250.0, 53.0, 22.0 ],
+                    "patching_rect": [ 639.0, 249.0, 53.0, 22.0 ],
                     "text": "0.5004"
                 }
             },
@@ -216,7 +231,7 @@
                     "maxclass": "newobj",
                     "numinlets": 2,
                     "numoutlets": 0,
-                    "patching_rect": [ 319.5, 290.0, 337.5, 22.0 ],
+                    "patching_rect": [ 319.5, 341.0, 337.5, 22.0 ],
                     "text": "mUnit.assert \"approx(in1, 0.5, 0.001)\" @name near"
                 }
             },
@@ -227,7 +242,7 @@
                     "maxclass": "newobj",
                     "numinlets": 2,
                     "numoutlets": 0,
-                    "patching_rect": [ 319.5, 325.0, 357.0, 22.0 ],
+                    "patching_rect": [ 319.5, 376.0, 357.0, 22.0 ],
                     "text": "mUnit.assert \"approx(in1, 0.5, 0.0001)\" @name tooFar"
                 }
             },
@@ -238,7 +253,7 @@
                     "maxclass": "comment",
                     "numinlets": 1,
                     "numoutlets": 0,
-                    "patching_rect": [ 726.0, 244.5, 290.0, 33.0 ],
+                    "patching_rect": [ 726.0, 295.5, 290.0, 33.0 ],
                     "text": "equals(actual, expected) on a list. Fails, and the diff says which element differs ($[2])"
                 }
             },
@@ -249,7 +264,7 @@
                     "numinlets": 2,
                     "numoutlets": 1,
                     "outlettype": [ "" ],
-                    "patching_rect": [ 1022.0, 259.0, 46.5, 22.0 ],
+                    "patching_rect": [ 1022.0, 310.0, 46.5, 22.0 ],
                     "text": "1 2 4"
                 }
             },
@@ -260,7 +275,7 @@
                     "maxclass": "newobj",
                     "numinlets": 2,
                     "numoutlets": 0,
-                    "patching_rect": [ 671.0, 290.0, 370.0, 22.0 ],
+                    "patching_rect": [ 671.0, 341.0, 370.0, 22.0 ],
                     "text": "mUnit.assert \"equals(in1, [1, 2, 3])\" @name listEquals"
                 }
             },
@@ -271,7 +286,7 @@
                     "maxclass": "comment",
                     "numinlets": 1,
                     "numoutlets": 0,
-                    "patching_rect": [ 20.0, 371.0, 292.0, 47.0 ],
+                    "patching_rect": [ 20.0, 422.0, 292.0, 47.0 ],
                     "text": "Inputs can be any type: a symbol compares with === (single quotes: Max strips double quotes in an object box), a list has a length"
                 }
             },
@@ -282,7 +297,7 @@
                     "numinlets": 2,
                     "numoutlets": 1,
                     "outlettype": [ "" ],
-                    "patching_rect": [ 319.0, 396.0, 46.5, 22.0 ],
+                    "patching_rect": [ 319.0, 447.0, 46.5, 22.0 ],
                     "text": "hello"
                 }
             },
@@ -293,7 +308,7 @@
                     "maxclass": "newobj",
                     "numinlets": 2,
                     "numoutlets": 0,
-                    "patching_rect": [ 20.0, 426.0, 318.0, 22.0 ],
+                    "patching_rect": [ 20.0, 477.0, 318.0, 22.0 ],
                     "text": "mUnit.assert in1 === 'hello' @name symbolInput"
                 }
             },
@@ -304,7 +319,7 @@
                     "numinlets": 2,
                     "numoutlets": 1,
                     "outlettype": [ "" ],
-                    "patching_rect": [ 319.0, 470.0, 66.0, 22.0 ],
+                    "patching_rect": [ 319.0, 521.0, 66.0, 22.0 ],
                     "text": "10 20 30"
                 }
             },
@@ -315,7 +330,7 @@
                     "maxclass": "newobj",
                     "numinlets": 2,
                     "numoutlets": 0,
-                    "patching_rect": [ 20.0, 496.0, 318.0, 22.0 ],
+                    "patching_rect": [ 20.0, 547.0, 318.0, 22.0 ],
                     "text": "mUnit.assert in1.length === 3 @name listLength"
                 }
             },
@@ -326,7 +341,7 @@
                     "maxclass": "comment",
                     "numinlets": 1,
                     "numoutlets": 0,
-                    "patching_rect": [ 391.0, 378.0, 290.0, 33.0 ],
+                    "patching_rect": [ 391.0, 429.0, 290.0, 33.0 ],
                     "text": "The measures work on lists of numbers: rms, peak, dc, maxDiff and snr (in dB). Passes."
                 }
             },
@@ -337,7 +352,7 @@
                     "numinlets": 2,
                     "numoutlets": 1,
                     "outlettype": [ "" ],
-                    "patching_rect": [ 781.0, 392.0, 124.5, 22.0 ],
+                    "patching_rect": [ 781.0, 443.0, 124.5, 22.0 ],
                     "text": "0.1 -0.1 0.2 -0.2"
                 }
             },
@@ -348,7 +363,7 @@
                     "maxclass": "newobj",
                     "numinlets": 2,
                     "numoutlets": 0,
-                    "patching_rect": [ 385.0, 426.0, 415.5, 22.0 ],
+                    "patching_rect": [ 385.0, 477.0, 415.5, 22.0 ],
                     "text": "mUnit.assert \"rms(in1) < 0.5 && peak(in1) <= 0.2\" @name quiet"
                 }
             },
@@ -359,7 +374,7 @@
                     "maxclass": "comment",
                     "numinlets": 1,
                     "numoutlets": 0,
-                    "patching_rect": [ 522.0, 453.0, 278.0, 47.0 ],
+                    "patching_rect": [ 522.0, 504.0, 278.0, 47.0 ],
                     "text": "Every helper is also passed to custom asserts (see failureFilesExample) and exported from libmunit."
                 }
             }
@@ -367,35 +382,39 @@
         "lines": [
             {
                 "patchline": {
-                    "destination": [ "obj-11", 2 ],
-                    "source": [ "obj-10", 0 ]
-                }
-            },
-            {
-                "patchline": {
-                    "destination": [ "obj-10", 0 ],
-                    "source": [ "obj-12", 1 ]
-                }
-            },
-            {
-                "patchline": {
-                    "destination": [ "obj-9", 0 ],
-                    "source": [ "obj-12", 0 ]
+                    "destination": [ "hdr-openfolder", 0 ],
+                    "hidden": 1,
+                    "source": [ "hdr-open", 0 ]
                 }
             },
             {
                 "patchline": {
                     "destination": [ "obj-15", 1 ],
-                    "midpoints": [ 647.5, 282.0, 647.5, 282.0 ],
-                    "order": 1,
-                    "source": [ "obj-14", 0 ]
+                    "midpoints": [ 648.5, 324.0, 647.5, 324.0 ],
+                    "source": [ "obj-1", 0 ]
                 }
             },
             {
                 "patchline": {
                     "destination": [ "obj-16", 1 ],
-                    "midpoints": [ 647.5, 282.0, 667.0, 282.0 ],
-                    "order": 0,
+                    "source": [ "obj-1", 1 ]
+                }
+            },
+            {
+                "patchline": {
+                    "destination": [ "obj-11", 2 ],
+                    "source": [ "obj-12", 1 ]
+                }
+            },
+            {
+                "patchline": {
+                    "destination": [ "obj-11", 1 ],
+                    "source": [ "obj-12", 0 ]
+                }
+            },
+            {
+                "patchline": {
+                    "destination": [ "obj-1", 0 ],
                     "source": [ "obj-14", 0 ]
                 }
             },
@@ -444,48 +463,36 @@
             {
                 "patchline": {
                     "destination": [ "obj-14", 0 ],
-                    "midpoints": [ 102.3, 237.0, 647.5, 237.0 ],
+                    "midpoints": [ 131.7, 237.0, 648.5, 237.0 ],
                     "source": [ "obj-7", 4 ]
                 }
             },
             {
                 "patchline": {
                     "destination": [ "obj-18", 0 ],
-                    "midpoints": [ 84.1, 237.0, 1031.5, 237.0 ],
+                    "midpoints": [ 106.15, 237.0, 1031.5, 237.0 ],
                     "source": [ "obj-7", 3 ]
                 }
             },
             {
                 "patchline": {
                     "destination": [ "obj-21", 0 ],
-                    "midpoints": [ 65.9, 237.0, 6.0, 237.0, 6.0, 357.0, 328.5, 357.0 ],
+                    "midpoints": [ 80.6, 237.0, 6.0, 237.0, 6.0, 418.06640625, 328.5, 418.06640625 ],
                     "source": [ "obj-7", 2 ]
                 }
             },
             {
                 "patchline": {
                     "destination": [ "obj-23", 0 ],
-                    "midpoints": [ 47.7, 237.0, 6.0, 237.0, 6.0, 465.0, 328.5, 465.0 ],
+                    "midpoints": [ 55.05, 237.0, 6.0, 237.0, 6.0, 507.93359375, 328.5, 507.93359375 ],
                     "source": [ "obj-7", 1 ]
                 }
             },
             {
                 "patchline": {
                     "destination": [ "obj-26", 0 ],
-                    "midpoints": [ 29.5, 237.0, 6.0, 237.0, 6.0, 357.0, 790.5, 357.0 ],
+                    "midpoints": [ 29.5, 237.0, 6.0, 237.0, 6.0, 406.47265625, 790.5, 406.47265625 ],
                     "source": [ "obj-7", 0 ]
-                }
-            },
-            {
-                "patchline": {
-                    "destination": [ "obj-11", 1 ],
-                    "source": [ "obj-9", 0 ]
-                }
-            },
-            {
-                "patchline": {
-                    "destination": [ "obj-of2", 0 ],
-                    "source": [ "obj-of1", 0 ]
                 }
             }
         ],

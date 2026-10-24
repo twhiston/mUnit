@@ -115,25 +115,9 @@
 									"patching_rect": [
 										10,
 										10,
-										620,
-										125
+										790,
+										140
 									]
-								}
-							},
-							{
-								"box": {
-									"id": "obj-2",
-									"maxclass": "comment",
-									"numinlets": 1,
-									"numoutlets": 0,
-									"patching_rect": [
-										20,
-										150,
-										780,
-										77
-									],
-									"text": "[mUnit.loadbang] bangs once, when the mUnit handler has started and been configured. A plain loadbang is too early: the node.script and v8 objects behind the framework are still starting, so an assert fed by it would miss its input. It works whether its patch loads before or after that moment, which matters when mUnit.harness opens several test patches. reset re-arms it, and it fires again at once if the handler is ready; bang fires it by hand.",
-									"linecount": 5
 								}
 							},
 							{
@@ -144,7 +128,7 @@
 									"numoutlets": 1,
 									"patching_rect": [
 										20,
-										242,
+										170,
 										99,
 										22
 									],
@@ -162,7 +146,7 @@
 									"numoutlets": 2,
 									"patching_rect": [
 										20,
-										277,
+										205,
 										42,
 										22
 									],
@@ -184,7 +168,7 @@
 									],
 									"patching_rect": [
 										20,
-										312,
+										240,
 										30,
 										22
 									],
@@ -199,7 +183,7 @@
 									"numoutlets": 0,
 									"patching_rect": [
 										20,
-										347,
+										275,
 										187,
 										22
 									],
@@ -214,7 +198,7 @@
 									"numoutlets": 0,
 									"patching_rect": [
 										80,
-										312,
+										240,
 										136,
 										22
 									],
@@ -229,7 +213,7 @@
 									"numoutlets": 0,
 									"patching_rect": [
 										20,
-										377,
+										305,
 										220,
 										36
 									],
@@ -245,7 +229,7 @@
 									"numoutlets": 1,
 									"patching_rect": [
 										270,
-										242,
+										170,
 										61,
 										22
 									],
@@ -263,7 +247,7 @@
 									"numoutlets": 0,
 									"patching_rect": [
 										270,
-										277,
+										205,
 										99,
 										22
 									],
@@ -278,7 +262,7 @@
 									"numoutlets": 0,
 									"patching_rect": [
 										270,
-										307,
+										235,
 										220,
 										49
 									],
@@ -297,7 +281,7 @@
 									],
 									"patching_rect": [
 										20,
-										438,
+										366,
 										42,
 										22
 									],
@@ -315,7 +299,7 @@
 									],
 									"patching_rect": [
 										70,
-										438,
+										366,
 										36,
 										22
 									],
@@ -330,7 +314,7 @@
 									"numoutlets": 1,
 									"patching_rect": [
 										20,
-										473,
+										401,
 										99,
 										22
 									],
@@ -348,7 +332,7 @@
 									"numoutlets": 0,
 									"patching_rect": [
 										20,
-										508,
+										436,
 										80,
 										22
 									],
@@ -363,7 +347,7 @@
 									"numoutlets": 0,
 									"patching_rect": [
 										20,
-										538,
+										466,
 										300,
 										77
 									],
@@ -379,7 +363,7 @@
 									"numoutlets": 1,
 									"patching_rect": [
 										20,
-										635,
+										563,
 										92,
 										22
 									],
@@ -397,7 +381,7 @@
 									"numoutlets": 2,
 									"patching_rect": [
 										20,
-										670,
+										598,
 										92,
 										22
 									],
@@ -416,7 +400,7 @@
 									"numoutlets": 0,
 									"patching_rect": [
 										132,
-										635,
+										563,
 										668,
 										63
 									],

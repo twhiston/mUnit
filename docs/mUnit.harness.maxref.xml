@@ -8,8 +8,12 @@
 	</digest>
 
 	<description>
-		<o>mUnit.harness</o> points <o>mUnit.handler</o> at your <m>munit.config.js</m> and, with <at>loadFolder</at>, opens a folder of test patches, so one patch runs a whole suite. Connect its outlet to the handler's inlet. It runs when its patch opens; the patch must be saved, since its folder is where the configuration and the tests are found. Without <at>loadFolder</at> it only loads the configuration. By default every matching test patch is opened at once and closed when the suite has finished; with <at>sequential</at> they run one at a time. The test patches need no handler or harness of their own: their asserts register with the running handler, and <o>mUnit.loadbang</o> fires in each once the handler is ready.
+		<o>mUnit.harness</o> points <o>mUnit.handler</o> at your <m>munit.config.js</m> and, with <at>loadFolder</at>, opens a folder of test patches, so one patch runs a whole suite. Connect its outlet to the handler's inlet. It runs when its patch opens; the patch must be saved, since its folder is where the configuration and the tests are found.
 	</description>
+
+	<discussion>
+		Without <at>loadFolder</at> it only loads the configuration. By default every matching test patch is opened at once and closed when the suite has finished; with <at>sequential</at> they run one at a time. The test patches need no handler or harness of their own: their asserts register with the running handler, and <o>mUnit.loadbang</o> fires in each once the handler is ready.
+	</discussion>
 
 	<!--METADATA-->
 	<metadatalist>
