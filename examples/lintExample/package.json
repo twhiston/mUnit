@@ -9,6 +9,6 @@
     "test": "munit run . --tests tests"
   },
   "devDependencies": {
-    "munit-cli": "^1.0.0-rc.5"
+    "munit-cli": "^1.0.0-rc.6"
   }
 }
